@@ -964,6 +964,40 @@ const topItems = Object.values(itemsMap)
   };
 }
 
+// export function getHourlyRevenueTrend(rawData: any) {
+//   const data = normalizeData(rawData);
+
+//   const offline = data.offline_revenue_hour_wise ?? [];
+//   const online = data.online_revenue_hour_wise ?? [];
+
+//   const hours = Array.from({ length: 24 }, (_, i) => ({
+//     hour: i,
+//     hourLabel: `${String(i).padStart(2, "0")}:00`,
+//     offlineRevenue: 0,
+//     onlineRevenue: 0,
+//     totalRevenue: 0,
+//   }));
+
+//   offline.forEach((item: any) => {
+//     const hour = Number(item.invoiceHour);
+//     if (!isNaN(hour) && hours[hour]) {
+//       hours[hour].offlineRevenue += Number(item.totalRevenue ?? 0);
+//     }
+//   });
+
+//   online.forEach((item: any) => {
+//     const hour = Number(item.orderHour);
+//     if (!isNaN(hour) && hours[hour]) {
+//       hours[hour].onlineRevenue += Number(item.totalRevenue ?? 0);
+//     }
+//   });
+
+//   hours.forEach((h) => {
+//     h.totalRevenue = h.offlineRevenue + h.onlineRevenue;
+//   });
+
+//   return hours;
+// }
 export function getHourlyRevenueTrend(rawData: any) {
   const data = normalizeData(rawData);
 
@@ -973,27 +1007,21 @@ export function getHourlyRevenueTrend(rawData: any) {
   const hours = Array.from({ length: 24 }, (_, i) => ({
     hour: i,
     hourLabel: `${String(i).padStart(2, "0")}:00`,
-    offlineRevenue: 0,
-    onlineRevenue: 0,
-    totalRevenue: 0,
+    revenue: 0,
   }));
 
   offline.forEach((item: any) => {
     const hour = Number(item.invoiceHour);
     if (!isNaN(hour) && hours[hour]) {
-      hours[hour].offlineRevenue += Number(item.totalRevenue ?? 0);
+      hours[hour].revenue += Number(item.totalRevenue ?? 0);
     }
   });
 
   online.forEach((item: any) => {
     const hour = Number(item.orderHour);
     if (!isNaN(hour) && hours[hour]) {
-      hours[hour].onlineRevenue += Number(item.totalRevenue ?? 0);
+      hours[hour].revenue += Number(item.totalRevenue ?? 0);
     }
-  });
-
-  hours.forEach((h) => {
-    h.totalRevenue = h.offlineRevenue + h.onlineRevenue;
   });
 
   return hours;

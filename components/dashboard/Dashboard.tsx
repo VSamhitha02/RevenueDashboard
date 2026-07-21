@@ -120,7 +120,7 @@ const hourlyRevenue = getHourlyRevenueTrend(data); // no source arg now
 </div>
 
 <div className="mt-4">
-  <HourlyRevenueTrend data={hourlyRevenue} source={hourlySource as "All" | "Offline" | "Online"} />
+  <HourlyRevenueTrend data={hourlyRevenue}  />
 </div>
         <div className="grid grid-cols-1 gap-6 mt-8">
           <PaymentModeAnalysis
