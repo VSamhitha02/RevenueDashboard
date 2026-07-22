@@ -998,6 +998,10 @@ const topItems = Object.values(itemsMap)
 
 //   return hours;
 // }
+function formatHour(h: number): string {
+  return `${h % 12 === 0 ? 12 : h % 12} ${h < 12 ? "AM" : "PM"}`;
+}
+
 export function getHourlyRevenueTrend(rawData: any) {
   const data = normalizeData(rawData);
 
@@ -1006,7 +1010,7 @@ export function getHourlyRevenueTrend(rawData: any) {
 
   const hours = Array.from({ length: 24 }, (_, i) => ({
     hour: i,
-    hourLabel: `${String(i).padStart(2, "0")}:00`,
+    hourLabel: formatHour(i),
     revenue: 0,
   }));
 
