@@ -127,7 +127,17 @@ console.log("online_item_wise", data.online_item_wise);
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" />
             <YAxis tickFormatter={(v) => `₹${v.toLocaleString("en-IN")}`} />
-            <Tooltip formatter={(value: any) => formatCurrency(Number(value))} />
+            <Tooltip labelStyle={{
+    color: "#000",
+    fontWeight: 600,
+  }}
+  labelFormatter={(label) =>
+    new Date(label).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+    })
+  }
+   formatter={(value: any) => formatCurrency(Number(value))} />
             <Legend />
 
             <ReferenceLine

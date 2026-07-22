@@ -16,6 +16,7 @@ import {
 
 type Props = {
   data: any[];
+  dateOption: string;
 };
 
 const formatNumber = (value: number) => {
@@ -25,20 +26,26 @@ const formatNumber = (value: number) => {
   return value.toString();
 };
 
-export default function RevenueTrend({ data }: Props) {
-  // Prefer an "average" field already on the data if present, otherwise
-  // compute it from revenue so the reference line always has a value.
+export default function RevenueTrend({ data, dateOption }: Props) {
   const avg =
     data.length > 0
       ? data[0]?.average ??
         data.reduce((sum, d) => sum + (d.revenue || 0), 0) / data.length
       : 0;
 
-return (
-    <div className="bg-blue-50 rounded-xl shadow-md p-6">
-      <h2 className="text-3xl font-bold mb-5 text-black">
-        Total Revenue Trend
-      </h2>
+  const title = ["Today", "Yesterday"].includes(dateOption)
+    ? "Revenue Trend"
+    : "Total Revenue Trend";
+
+  const isSingleDay = data.length <= 1;
+
+  if (isSingleDay) {
+    return null;
+  }
+
+  return (
+    <div className="bg-pink-50 rounded-xl shadow-md p-6">
+      <h2 className="text-3xl font-bold mb-5 text-black">{title}</h2>
 
       <ResponsiveContainer width="100%" height={450}>
         <ComposedChart

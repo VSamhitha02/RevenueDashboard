@@ -20,19 +20,21 @@ import {
   getPaymentModeAnalysis,
   getHourlyRevenueTrend,
 } from "@/utils/chartData";
-
-export default function Dashboard() {
+interface DashboardProps {
+  fseId: string;
+}
+export default function Dashboard({ fseId }: DashboardProps) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [hourlySource, setHourlySource] = useState("All");
   const [orderType, setOrderType] = useState("All");
   const [dateOption, setDateOption] = useState<DateFilterOption>("Today");
-
+  const [selectedRange, setSelectedRange] = useState("1D");
   async function fetchData(range: { startDate: string; endDate: string }) {
     try {
       setLoading(true);
       const response = await getRevenueDashboard({
-        fseIds: ["M5FZajtrC1cBewZG8YBk"],
+        fseIds: [fseId],
         startDate: range.startDate,
         endDate: range.endDate,
         orderTypes: [],
@@ -114,7 +116,10 @@ export default function Dashboard() {
         </div>
 
         <div className="mt-8">
-          <RevenueTrend data={revenueTrend} />
+          <RevenueTrend
+  data={revenueTrend}
+  dateOption={dateOption}
+/>
         </div>
 
         <div className="mt-4">
@@ -151,7 +156,7 @@ export default function Dashboard() {
         <OverallAnalysis data={overallAnalysis} />
         */}
 
-        <select
+        {/* <select
           value={hourlySource}
           onChange={(e) => setHourlySource(e.target.value)}
           className="mt-4 border rounded-md px-3 py-2 text-black bg-white"
@@ -159,7 +164,7 @@ export default function Dashboard() {
           <option value="All">All</option>
           <option value="Offline">Offline</option>
           <option value="Online">Online</option>
-        </select>
+        </select> */}
       </div>
     </main>
   );

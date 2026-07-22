@@ -61,6 +61,16 @@ export default function OrderTypeRevenueAnalysis({ data }: Props) {
           />
 
 <Tooltip
+  labelFormatter={(label) =>
+    new Date(label).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+    })
+  }
+  labelStyle={{
+    color: "#000",
+    fontWeight: 600,
+  }}
   formatter={(value: any, name: any) => [
     `₹${Number(value).toLocaleString("en-IN")}`,
     name,

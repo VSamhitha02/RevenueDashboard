@@ -66,9 +66,9 @@ const paymentNames: Record<string, string> = {
     barData.length === 0 ? 0 : totalRevenue / barData.length;
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-5">
+    <div className="bg-green-50 rounded-lg shadow-md p-5">
       <h2 className="text-xl font-semibold text-black mb-6">
-        {title}
+      Payment Mode Revenue
       </h2>
 
       {/* ---------------- PIE CHART ---------------- */}
@@ -94,13 +94,17 @@ const paymentNames: Record<string, string> = {
                   fill={
                     PIE_COLORS[
                       entry.name as keyof typeof PIE_COLORS
-                    ] || "#9ca3af"
+                    ] || "#040404"
                   }
                 />
               ))}
             </Pie>
 
 <Tooltip
+  labelStyle={{
+    color: "#000",
+    fontWeight: 600,
+  }}
   formatter={(value: any, name: any) => [
     `₹${Number(value).toLocaleString("en-IN")}`,
     paymentNames[name] || name,
@@ -124,12 +128,16 @@ const paymentNames: Record<string, string> = {
             tickFormatter={(value) => formatAmount(value)}
           />
 
-          <Tooltip
-            formatter={(value: any) => [
-              `₹${Number(value).toLocaleString("en-IN")}`,
-              "Revenue",
-            ]}
-          />
+         <Tooltip
+  labelStyle={{
+    color: "#000",
+    fontWeight: 600,
+  }}
+  formatter={(value: any) => [
+    `₹${Number(value).toLocaleString("en-IN")}`,
+    "Revenue",
+  ]}
+/>
 
           <Legend />
 

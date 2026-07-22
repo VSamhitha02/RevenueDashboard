@@ -3,6 +3,47 @@
 import { useState } from "react";
 import { DateFilterOption } from "@/utils/dateRanges";
 
+function formatDisplayDate(date: Date): string {
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function getButtonLabel(
+  option: DateFilterOption,
+  customDate: string,
+  customStart: string,
+  customEnd: string
+): string {
+  if (option === "Today") {
+    return formatDisplayDate(new Date());
+  }
+
+  if (option === "Yesterday") {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return formatDisplayDate(yesterday);
+  }
+
+  if (option === "Custom Date") {
+    return customDate ? formatDisplayDate(new Date(customDate)) : option;
+  }
+
+  if (option === "Custom Date Range") {
+    if (customStart && customEnd) {
+      return `${formatDisplayDate(new Date(customStart))} - ${formatDisplayDate(
+        new Date(customEnd)
+      )}`;
+    }
+    return option;
+  }
+
+  // "This Week", "Last Week", "This Month", "Last Month" — keep as-is
+  return option;
+}
+
 type Props = {
   selected: DateFilterOption;
   onSelect: (
@@ -44,9 +85,9 @@ export default function DateFilter({ selected, onSelect }: Props) {
     <div className="relative inline-block">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="bg-white border rounded-lg px-4 py-2 font-semibold text-black shadow"
+        className="bg-white border rounded-lg px-4 py-2 font-semibold text-black shadow\"
       >
-        📅 {selected}
+        📅 {getButtonLabel(selected, customDate, customStart, customEnd)}
       </button>
 
       {open && (
@@ -59,7 +100,7 @@ export default function DateFilter({ selected, onSelect }: Props) {
             <div key={option}>
               <div
                 onClick={() => handleSelect(option)}
-                className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-white/10"
+                className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-black hover:text-white bg-white text-black"
               >
                 <span>{option}</span>
                 {selected === option && <span>✓</span>}
@@ -115,10 +156,10 @@ export default function DateFilter({ selected, onSelect }: Props) {
             </div>
           ))}
 
-          <div className="p-3 flex justify-end">
+          <div className="p-3 flex justify-end bg-white">
             <button
               onClick={() => setOpen(false)}
-              className="text-orange-400 font-semibold"
+              className="text-orange-400 font-semibold  bg-white"
             >
               Done
             </button>

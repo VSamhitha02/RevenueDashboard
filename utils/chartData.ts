@@ -649,26 +649,28 @@ export function getPaymentModeAnalysis(rawData: any, orderType: string = "All") 
         map.set(date, { date, cash: 0, gateway: 0, noCharge: 0, notPaid: 0 });
       }
  
-      const row = map.get(date);
+const row = map.get(date);
       const mode = String(rawMode).trim().toLowerCase().replace(/\s+/g, "");
- 
+      const rev = Number(item.totalRevenue || item.revenue || 0);
+
       switch (mode) {
         case "cash":
-          row.cash += Number(item.totalRevenue || item.revenue || 0);
+          row.cash += rev;
           break;
         case "gateway":
         case "online":
         case "upi":
         case "card":
-          row.gateway += Number(item.totalRevenue || item.revenue || 0);
-          break;
-        case "nocharge":
-        case "complimentary":
-          row.noCharge += Number(item.totalRevenue || item.revenue || 0);
+        case "cards":
+          row.gateway += rev;
           break;
         case "notpaid":
         case "due":
-          row.notPaid += Number(item.totalRevenue || item.revenue || 0);
+          row.notPaid += rev;
+          break;
+        default:
+          // anything else (dineout, nocharge, complimentary, unknown modes) → Others
+          row.noCharge += rev;
           break;
       }
     });

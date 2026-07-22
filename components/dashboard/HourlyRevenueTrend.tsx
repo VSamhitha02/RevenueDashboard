@@ -22,7 +22,7 @@ interface HourlyRevenueTrendProps {
 
 export default function HourlyRevenueTrend({ data }: HourlyRevenueTrendProps) {
   return (
-    <div className="bg-white rounded-xl shadow p-6">
+    <div className="bg-yellow-50 rounded-xl shadow p-6">
       <h2 className="text-xl font-semibold mb-4 text-black">
         Hourly Revenue Trend
       </h2>
@@ -38,7 +38,22 @@ export default function HourlyRevenueTrend({ data }: HourlyRevenueTrendProps) {
             height={60}
           />
           <YAxis tickFormatter={(value) => `₹${Number(value).toLocaleString("en-IN")}`} />
-          <Tooltip formatter={(value) => `₹${Number(value).toLocaleString("en-IN")}`} />
+          <Tooltip
+  contentStyle={{
+    backgroundColor: "#f9f7f7",
+    border: "1px solid #f6f3f3",
+    borderRadius: "8px",
+    color: "#060606",
+  }}
+  labelStyle={{
+    color: "#090909",
+    fontWeight: 600,
+  }}
+  itemStyle={{
+    color: "#0b0a0a",
+  }}
+  formatter={(value) => `₹${Number(value).toLocaleString("en-IN")}`}
+/>
           <Legend />
 
           <Line
