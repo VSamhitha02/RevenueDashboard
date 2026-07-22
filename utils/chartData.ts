@@ -1,5 +1,6 @@
 
 
+ 
 // ---------------------------------------------------------------------------
 // Normalizes the raw revenue JSON.
 //
@@ -48,17 +49,17 @@ export function getSummaryData(
   orderType: string = "All"
 ) {
   const data = normalizeData(rawData);
-
+ 
   let offline = data.offline_revenue_day_wise ?? [];
   let online = data.online_revenue_day_wise ?? [];
-
+ 
   // Offline filtering
   if (orderType === "dineIn" || orderType === "takeAway") {
     offline = offline.filter(
       (item: any) => item.orderType === orderType
     );
   }
-
+ 
   // Online filtering
   else if (orderType === "swiggy" || orderType === "zomato") {
     online = online.filter(
@@ -68,29 +69,29 @@ export function getSummaryData(
     );
     offline = [];
   }
-
+ 
   // All = don't filter anything
-
+ 
   const offlineRevenue = offline.reduce(
     (sum: number, item: any) => sum + (item.totalRevenue ?? 0),
     0
   );
-
+ 
   const onlineRevenue = online.reduce(
     (sum: number, item: any) => sum + (item.totalRevenue ?? 0),
     0
   );
-
+ 
   const offlineOrders = offline.reduce(
     (sum: number, item: any) => sum + (item.orders ?? 0),
     0
   );
-
+ 
   const onlineOrders = online.reduce(
     (sum: number, item: any) => sum + (item.orders ?? 0),
     0
   );
-
+ 
   const offlineTaxes = offline.reduce(
     (sum: number, item: any) =>
       sum +
@@ -101,7 +102,7 @@ export function getSummaryData(
         0),
     0
   );
-
+ 
   const onlineTaxes = online.reduce(
     (sum: number, item: any) =>
       sum +
@@ -112,7 +113,7 @@ export function getSummaryData(
         0),
     0
   );
-
+ 
   const offlineCharges = offline.reduce(
     (sum: number, item: any) =>
       sum +
@@ -122,7 +123,7 @@ export function getSummaryData(
         0),
     0
   );
-
+ 
   const onlineCharges = online.reduce(
     (sum: number, item: any) =>
       sum +
@@ -132,35 +133,35 @@ export function getSummaryData(
         0),
     0
   );
-
+ 
   const offlineMerchantDiscount = offline.reduce(
     (sum: number, item: any) =>
       sum + (item.merchantDiscount ?? 0),
     0
   );
-
+ 
   const onlineMerchantDiscount = online.reduce(
     (sum: number, item: any) =>
       sum + (item.merchantDiscount ?? 0),
     0
   );
-
+ 
   const totalRevenue = offlineRevenue + onlineRevenue;
-
+ 
   const totalOrders = offlineOrders + onlineOrders;
-
+ 
   const daySet = new Set<string>();
-
+ 
   offline.forEach((item: any) => {
     if (item.invoiceDate) daySet.add(item.invoiceDate);
   });
-
+ 
   online.forEach((item: any) => {
     if (item.orderDate) daySet.add(item.orderDate);
   });
-
+ 
   const totalDays = daySet.size;
-
+ 
   return {
     totalRevenue,
     offlineRevenue,
@@ -180,10 +181,10 @@ export function getRevenueTrend(
   orderType: string = "All"
 ) {
   const data = normalizeData(rawData);
-
+ 
   let offline = data.offline_revenue_day_wise ?? [];
   let online = data.online_revenue_day_wise ?? [];
-
+ 
   if (orderType === "dineIn" || orderType === "takeAway") {
     offline = offline.filter(
       (item: any) => item.orderType === orderType
@@ -200,25 +201,25 @@ export function getRevenueTrend(
     );
     offline = [];
   }
-
+ 
   const grouped: Record<string, number> = {};
-
+ 
   offline.forEach((item: any) => {
     const date = item.invoiceDate;
-
+ 
     grouped[date] =
       (grouped[date] ?? 0) +
       (item.totalRevenue ?? 0);
   });
-
+ 
   online.forEach((item: any) => {
     const date = item.orderDate;
-
+ 
     grouped[date] =
       (grouped[date] ?? 0) +
       (item.totalRevenue ?? 0);
   });
-
+ 
   const result = Object.entries(grouped)
     .sort(
       ([a], [b]) =>
@@ -229,17 +230,17 @@ export function getRevenueTrend(
       date,
       revenue,
     }));
-
+ 
   const totalRevenue = result.reduce(
     (sum, item) => sum + item.revenue,
     0
   );
-
+ 
   const average =
     result.length === 0
       ? 0
       : totalRevenue / result.length;
-
+ 
   return result.map((item) => ({
     ...item,
     average,
@@ -526,13 +527,13 @@ export function getDailyAverageTrend(
   orderType: string = "All"
 ) {
   const data = normalizeData(rawData);
-
+ 
   const dateMap = new Map();
-
+ 
   // ---------------- OFFLINE ----------------
-
+ 
   let offline = data.offline_revenue_day_wise ?? [];
-
+ 
   if (orderType === "dineIn") {
     offline = offline.filter((x: any) => x.orderType === "dineIn");
   } else if (orderType === "takeAway") {
@@ -542,24 +543,24 @@ export function getDailyAverageTrend(
       (x: any) => x.orderType === "" || x.orderType == null
     );
   }
-
+ 
   offline.forEach((item: any) => {
     const date = item.invoiceDate;
-
+ 
     if (!dateMap.has(date)) {
       dateMap.set(date, {
         date,
         revenue: 0,
       });
     }
-
+ 
     dateMap.get(date).revenue += item.totalRevenue;
   });
-
+ 
   // ---------------- ONLINE ----------------
-
+ 
   let online = data.online_revenue_day_wise ?? [];
-
+ 
   if (orderType === "swiggy") {
     online = online.filter((x: any) => x.orderType === "swiggy");
   } else if (orderType === "zomato") {
@@ -569,26 +570,26 @@ export function getDailyAverageTrend(
       (x: any) => x.orderType === "" || x.orderType == null
     );
   }
-
+ 
   online.forEach((item: any) => {
     const date = item.orderDate;
-
+ 
     if (!dateMap.has(date)) {
       dateMap.set(date, {
         date,
         revenue: 0,
       });
     }
-
+ 
     dateMap.get(date).revenue += item.totalRevenue;
   });
-
+ 
   const rows = Array.from(dateMap.values());
-
+ 
   const avgRevenue =
     rows.reduce((sum, item) => sum + item.revenue, 0) /
     (rows.length || 1);
-
+ 
   return rows.map((item) => ({
     date: new Date(item.date).toLocaleDateString("en-GB", {
       day: "2-digit",
@@ -598,28 +599,28 @@ export function getDailyAverageTrend(
     average: avgRevenue,
   }));
 }
-
+ 
 export function getPaymentModeAnalysis(rawData: any, orderType: string = "All") {
   try {
     console.log("--- DEBUG START: getPaymentModeAnalysis ---");
     // console.log("Raw Data Received Type:", orderTypeof rawData);
-    
+   
     const data = normalizeData(rawData);
     console.log("Normalized Data Keys:", Object.keys(data));
-
+ 
     let payment = data.payment_mode_wise;
-    
+   
     // Fallback if the array doesn't exist at all
     if (!payment) {
       console.warn("⚠️ Warning: data.payment_mode_wise is undefined or null!");
       payment = [];
     }
-    
+   
     if (!Array.isArray(payment)) {
       console.error("❌ Error: data.payment_mode_wise is not an array!", payment);
       payment = [];
     }
-
+ 
     // Filter array securely
     if (orderType === "dineIn") {
       payment = payment.filter((item: any) => item?.orderType === "dineIn");
@@ -628,29 +629,29 @@ export function getPaymentModeAnalysis(rawData: any, orderType: string = "All") 
     } else {
       payment = payment.filter((item: any) => item?.orderType === "" || item?.orderType == null);
     }
-
+ 
     console.log(`Filtered payment array count for [${orderType}]:`, payment.length);
-
+ 
     const map = new Map();
-
+ 
     payment.forEach((item: any) => {
       if (!item) return;
-      
+     
       const rawMode = item.mode || item.paymentMode || item.payment_mode || item.paymentMethod || "";
       if (!item.invoiceDate) return;
-
+ 
       const date = new Date(item.invoiceDate).toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "short",
       });
-
+ 
       if (!map.has(date)) {
         map.set(date, { date, cash: 0, gateway: 0, noCharge: 0, notPaid: 0 });
       }
-
+ 
       const row = map.get(date);
       const mode = String(rawMode).trim().toLowerCase().replace(/\s+/g, "");
-
+ 
       switch (mode) {
         case "cash":
           row.cash += Number(item.totalRevenue || item.revenue || 0);
@@ -671,43 +672,43 @@ export function getPaymentModeAnalysis(rawData: any, orderType: string = "All") 
           break;
       }
     });
-
+ 
     const barData = Array.from(map.values());
     const totals = { gateway: 0, cash: 0, noCharge: 0, notPaid: 0 };
-
+ 
     barData.forEach((item: any) => {
       totals.gateway += item.gateway;
       totals.cash += item.cash;
       totals.noCharge += item.noCharge;
       totals.notPaid += item.notPaid;
     });
-
+ 
     const pieData = [
       { name: "Gateway", value: totals.gateway },
       { name: "Cash", value: totals.cash },
       { name: "Others", value: totals.noCharge + totals.notPaid },
     ];
-
+ 
     console.log("Output barData generated successfully:", barData.length, "rows");
     console.log("--- DEBUG END ---");
-
+ 
     return { pieData, barData };
-
+ 
   } catch (error) {
     // This stops a full page crash if something deeper goes wrong
     console.error("💥 CRASH inside getPaymentModeAnalysis:", error);
     return { pieData: [], barData: [] };
   }
 }
-
+ 
 export function getRevenueLeakageAnalysis(
   rawData: any,
   orderType: string = "All"
 ) {
   const data = normalizeData(rawData);
-
+ 
   let leakage = data.revenue_leakage_wise ?? [];
-
+ 
   // Apply filter
   if (
     orderType === "dineIn" ||
@@ -725,7 +726,7 @@ export function getRevenueLeakageAnalysis(
         item.orderType === ""
     );
   }
-
+ 
   const map = new Map<
     string,
     {
@@ -734,10 +735,10 @@ export function getRevenueLeakageAnalysis(
       orders: number;
     }
   >();
-
+ 
   leakage.forEach((item: any) => {
     const key = item.groupType || "Unknown";
-
+ 
     if (!map.has(key)) {
       map.set(key, {
         groupType: key,
@@ -745,28 +746,28 @@ export function getRevenueLeakageAnalysis(
         orders: 0,
       });
     }
-
+ 
     const row = map.get(key)!;
-
+ 
     row.totalRevenue += item.totalRevenue ?? 0;
     row.orders += item.orders ?? 0;
   });
-
+ 
   return Array.from(map.values());
 }
-
+ 
 // export function getItemSegmentAnalysis(
 //   rawData: any,
 //   orderType: string = "All"
 // ) {
 //   const data = normalizeData(rawData);
-
+ 
 //   // ==========================
 //   // OFFLINE
 //   // ==========================
-
+ 
 //   let offline = data.offline_item_wise ?? [];
-
+ 
 //   if (orderType === "dineIn") {
 //     offline = offline.filter(
 //       (item: any) =>
@@ -793,13 +794,13 @@ export function getRevenueLeakageAnalysis(
 //         item.segment !== ""
 //     );
 //   }
-
+ 
 //   // ==========================
 //   // ONLINE
 //   // ==========================
-
+ 
 //   let online = data.online_item_wise ?? [];
-
+ 
 //   if (orderType === "swiggy") {
 //     online = online.filter(
 //       (item: any) =>
@@ -824,7 +825,7 @@ export function getRevenueLeakageAnalysis(
 //         item.segment !== ""
 //     );
 //   }
-
+ 
 // return {
 //   offlineItems: offline,
 //   onlineItems: online,
@@ -832,7 +833,7 @@ export function getRevenueLeakageAnalysis(
 // }
 export function getItemSegmentAnalysis(rawData: any) {
   const data = normalizeData(rawData);
-
+ 
   const offlineItems = (data.offline_item_wise ?? []).map((item: any) => ({
     itemName: item.name,
     segment: item.segment,
@@ -841,7 +842,7 @@ export function getItemSegmentAnalysis(rawData: any) {
     quantity: item.totalQuantity ?? 0,
     revenue: item.netAmount ?? item.itemTotal ?? 0,
   }));
-
+ 
   const onlineItems = (data.online_item_wise ?? []).map((item: any) => ({
     itemName: item.name,
     segment: item.segment,
@@ -850,65 +851,65 @@ export function getItemSegmentAnalysis(rawData: any) {
     quantity: item.totalQuantity ?? 0,
     revenue: item.netAmount ?? item.itemTotal ?? 0,
   }));
-
+ 
   return { offlineItems, onlineItems };
 }
-
+ 
 export function getItemSegmentDashboard(
   rawData: any,
   selectedSegment: string
 ) {
   const data = getItemSegmentAnalysis(rawData);
-
+ 
   const items = [...(data.offlineItems ?? []), ...(data.onlineItems ?? [])];
-
+ 
   const segments = [
     "All",
     ...Array.from(
       new Set(items.map((i: any) => i.segment).filter(Boolean))
     ),
   ];
-
+ 
   const filteredItems =
     selectedSegment === "All"
       ? items
       : items.filter((i: any) => i.segment === selectedSegment);
-
+ 
   // ---------------- Cards ----------------
-
+ 
   const totalRevenue = filteredItems.reduce(
     (s: number, i: any) => s + i.revenue,
     0
   );
-
+ 
   const totalOrders = filteredItems.reduce(
     (s: number, i: any) => s + i.quantity,
     0
   );
-
+ 
   const uniqueDays = new Set(filteredItems.map((i: any) => i.date));
-
+ 
   const avgRevenuePerDay =
     uniqueDays.size === 0 ? 0 : totalRevenue / uniqueDays.size;
-
+ 
   const avgOrderValue =
     totalOrders === 0 ? 0 : totalRevenue / totalOrders;
-
+ 
   // ---------------- Chart: dineIn vs takeAway per day ----------------
-
+ 
   const grouped: Record<string, any> = {};
-
+ 
   filteredItems.forEach((i: any) => {
     if (!i.date) return;
-
+ 
     if (!grouped[i.date]) {
       grouped[i.date] = { date: i.date, dineIn: 0, takeAway: 0 };
     }
-
+ 
     if (i.orderType === "dineIn") grouped[i.date].dineIn += i.revenue;
     if (i.orderType === "takeAway") grouped[i.date].takeAway += i.revenue;
   });
-
+ 
   const chartData = Object.values(grouped)
     .sort(
       (a: any, b: any) =>
@@ -921,14 +922,14 @@ export function getItemSegmentDashboard(
         month: "long",
       }),
     }));
-
+ 
   // ---------------- Top 7 Items ----------------
-
+ 
   const itemsMap: Record<string, any> = {};
-
+ 
   filteredItems.forEach((i: any) => {
     if (!i.itemName) return;
-
+ 
     if (!itemsMap[i.itemName]) {
       itemsMap[i.itemName] = {
         itemName: i.itemName,
@@ -937,11 +938,11 @@ export function getItemSegmentDashboard(
         orders: 0,
       };
     }
-
+ 
     itemsMap[i.itemName].totalRevenue += i.revenue;
     itemsMap[i.itemName].orders += i.quantity;
   });
-
+ 
 const topItems = Object.values(itemsMap)
   .sort((a: any, b: any) => b.totalRevenue - a.totalRevenue)
   .map((i: any) => ({
@@ -963,45 +964,10 @@ const topItems = Object.values(itemsMap)
     topItems,
   };
 }
-
-// export function getHourlyRevenueTrend(rawData: any) {
-//   const data = normalizeData(rawData);
-
-//   const offline = data.offline_revenue_hour_wise ?? [];
-//   const online = data.online_revenue_hour_wise ?? [];
-
-//   const hours = Array.from({ length: 24 }, (_, i) => ({
-//     hour: i,
-//     hourLabel: `${String(i).padStart(2, "0")}:00`,
-//     offlineRevenue: 0,
-//     onlineRevenue: 0,
-//     totalRevenue: 0,
-//   }));
-
-//   offline.forEach((item: any) => {
-//     const hour = Number(item.invoiceHour);
-//     if (!isNaN(hour) && hours[hour]) {
-//       hours[hour].offlineRevenue += Number(item.totalRevenue ?? 0);
-//     }
-//   });
-
-//   online.forEach((item: any) => {
-//     const hour = Number(item.orderHour);
-//     if (!isNaN(hour) && hours[hour]) {
-//       hours[hour].onlineRevenue += Number(item.totalRevenue ?? 0);
-//     }
-//   });
-
-//   hours.forEach((h) => {
-//     h.totalRevenue = h.offlineRevenue + h.onlineRevenue;
-//   });
-
-//   return hours;
-// }
 function formatHour(h: number): string {
   return `${h % 12 === 0 ? 12 : h % 12} ${h < 12 ? "AM" : "PM"}`;
 }
-
+ 
 export function getHourlyRevenueTrend(rawData: any) {
   const data = normalizeData(rawData);
 
@@ -1015,18 +981,23 @@ export function getHourlyRevenueTrend(rawData: any) {
   }));
 
   offline.forEach((item: any) => {
-    const hour = Number(item.invoiceHour);
+    const hour = Number(item.orderHour); // <-- was invoiceHour
+    const rev = Number(item.totalRevenue ?? item.itemTotal ?? 0);
     if (!isNaN(hour) && hours[hour]) {
-      hours[hour].revenue += Number(item.totalRevenue ?? 0);
+      hours[hour].revenue += rev;
     }
   });
 
   online.forEach((item: any) => {
     const hour = Number(item.orderHour);
+    const rev = Number(item.totalRevenue ?? item.itemTotal ?? 0);
     if (!isNaN(hour) && hours[hour]) {
-      hours[hour].revenue += Number(item.totalRevenue ?? 0);
+      hours[hour].revenue += rev;
     }
   });
 
-  return hours;
+  const totalRevenue = hours.reduce((sum, h) => sum + h.revenue, 0);
+  const average = totalRevenue / hours.length;
+
+  return hours.map((h) => ({ ...h, average }));
 }

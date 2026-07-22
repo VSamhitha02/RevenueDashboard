@@ -7,6 +7,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
   ResponsiveContainer,
 } from "recharts";
 
@@ -15,6 +16,7 @@ interface HourlyRevenueTrendProps {
     hour: number;
     hourLabel: string;
     revenue: number;
+    average: number;
   }[];
 }
 
@@ -25,18 +27,36 @@ export default function HourlyRevenueTrend({ data }: HourlyRevenueTrendProps) {
         Hourly Revenue Trend
       </h2>
 
-      <ResponsiveContainer width="100%" height={350}>
-        <LineChart data={data}>
+      <ResponsiveContainer width="100%" height={400}>
+        <LineChart data={data} margin={{ top: 10, right: 20, bottom: 40, left: 20 }}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="hourLabel" />
-          <YAxis />
-          <Tooltip />
+          <XAxis
+            dataKey="hourLabel"
+            interval={0}
+            angle={-45}
+            textAnchor="end"
+            height={60}
+          />
+          <YAxis tickFormatter={(value) => `₹${Number(value).toLocaleString("en-IN")}`} />
+          <Tooltip formatter={(value) => `₹${Number(value).toLocaleString("en-IN")}`} />
+          <Legend />
+
           <Line
             type="monotone"
             dataKey="revenue"
-            name="Total Revenue"
+            name="Revenue"
             stroke="#2563eb"
             strokeWidth={2}
+            dot={false}
+          />
+
+          <Line
+            type="monotone"
+            dataKey="average"
+            name="Average"
+            stroke="#dc2626"
+            strokeWidth={2}
+            strokeDasharray="5 5"
             dot={false}
           />
         </LineChart>
