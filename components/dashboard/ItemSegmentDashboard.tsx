@@ -127,7 +127,17 @@ console.log("online_item_wise", data.online_item_wise);
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" />
             <YAxis tickFormatter={(v) => `₹${v.toLocaleString("en-IN")}`} />
-            <Tooltip formatter={(value: any) => formatCurrency(Number(value))} />
+            <Tooltip labelStyle={{
+    color: "#000",
+    fontWeight: 600,
+  }}
+  labelFormatter={(label) =>
+    new Date(label).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+    })
+  }
+   formatter={(value: any) => formatCurrency(Number(value))} />
             <Legend />
 
             <ReferenceLine
@@ -146,7 +156,7 @@ console.log("online_item_wise", data.online_item_wise);
       {/* ---------------- Top 10 Table ---------------- */}
       <div className="bg-indigo-100 rounded-xl shadow p-5">
         <h3 className="text-xl text-black font-semibold mb-4 text-center">
-          Top 10 Item Wise Revenue Details
+          Item Wise Revenue Details
         </h3>
 
         <div className="overflow-auto">

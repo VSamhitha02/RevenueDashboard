@@ -13,121 +13,79 @@ type SummaryCardsProps = {
   };
 };
 
-export default function SummaryCards({
-  summary,
-}: SummaryCardsProps) {
+export default function SummaryCards({ summary }: SummaryCardsProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-
-      {/* Total Revenue */}
-      <div className="
-bg-white
-rounded-xl
-shadow-md
-border-l-4
-border-blue-500
-p-5
-">
-        <h3 className="text-gray-500">Total Revenue</h3>
-        <p className="text-3xl font-bold text-black">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-6 gap-3">
+      {/* Total Revenue - Soft Lavender */}
+      <div className="bg-[#E9D5FF] rounded-2xl shadow-sm p-3.5 border border-purple-200/50 min-w-0 text-left pl-3">
+        <h3 className="text-gray-700 text-xs sm:text-sm font-semibold tracking-wide truncate">
+          Total Revenue
+        </h3>
+        <p
+          className="text-lg xl:text-xl 2xl:text-2xl font-extrabold text-black mt-1.5 truncate tracking-tighter"
+          title={`₹${summary.totalRevenue.toLocaleString("en-IN")}`}
+        >
           ₹{summary.totalRevenue.toLocaleString("en-IN")}
         </p>
       </div>
 
-      {/* Offline Revenue */}
-      {/* <div className="bg-white rounded-lg shadow-md p-5">
-        <h3 className="text-gray-500">Offline Revenue</h3>
-        <p className="text-3xl font-bold text-black">
-          ₹{summary.offlineRevenue.toLocaleString("en-IN")}
-        </p>
-      </div> */}
-
-      {/* Online Revenue */}
-      {/* <div className="bg-white rounded-lg shadow-md p-5">
-        <h3 className="text-gray-500">Online Revenue</h3>
-        <p className="text-3xl font-bold text-black">
-          ₹{summary.onlineRevenue.toLocaleString("en-IN")}
-        </p>
-      </div> */}
-
-      {/* Orders */}
-      <div className="
-bg-white
-rounded-xl
-shadow-md
-border-l-4
-border-green-500
-p-5
-">
-        <h3 className="text-gray-500">Orders</h3>
-        <p className="text-3xl font-bold text-black">
-          {summary.totalOrders}
+      {/* Orders - Soft Peach */}
+      <div className="bg-[#FED7AA] rounded-2xl shadow-sm p-3.5 border border-orange-200/50 min-w-0 text-left pl-3">
+        <h3 className="text-gray-700 text-xs sm:text-sm font-semibold tracking-wide truncate">
+          No. of Orders
+        </h3>
+        <p className="text-lg xl:text-xl 2xl:text-2xl font-extrabold text-black mt-1.5 truncate tracking-tighter">
+          {summary.totalOrders.toLocaleString("en-IN")}
         </p>
       </div>
 
-      {/* Average Revenue */}
-      <div className="
-bg-white
-rounded-xl
-shadow-md
-border-l-4
-border-purple-500
-p-5
-">
-        <h3 className="text-gray-500">Avg Revenue</h3>
-        <p className="text-3xl font-bold text-black">
-          ₹{summary.averageRevenue.toLocaleString("en-IN", {
+      {/* Average Revenue - Soft Pink */}
+      <div className="bg-[#FECDD3] rounded-2xl shadow-sm p-3.5 border border-rose-200/50 min-w-0 text-left pl-3">
+        <h3 className="text-gray-700 text-xs sm:text-sm font-semibold tracking-wide truncate">
+          Avg Revenue
+        </h3>
+        <p
+          className="text-lg xl:text-xl 2xl:text-2xl font-extrabold text-black mt-1.5 truncate tracking-tighter"
+          title={`₹${summary.averageRevenue.toLocaleString("en-IN", {
+            maximumFractionDigits: 2,
+          })}`}
+        >
+          ₹
+          {summary.averageRevenue.toLocaleString("en-IN", {
             maximumFractionDigits: 2,
           })}
         </p>
       </div>
 
-      {/* Total Charges */}
-      <div className="
-bg-white
-rounded-xl
-shadow-md
-border-l-4
-border-orange-500
-p-5
-">
-        <h3 className="text-gray-500">Total Charges</h3>
-        <p className="text-3xl font-bold text-black">
+      {/* Total Charges - Soft Purple */}
+      <div className="bg-[#DDD6FE] rounded-2xl shadow-sm p-3.5 border border-violet-200/50 min-w-0 text-left pl-3">
+        <h3 className="text-gray-700 text-xs sm:text-sm font-semibold tracking-wide truncate">
+          Total Charges
+        </h3>
+        <p className="text-lg xl:text-xl 2xl:text-2xl font-extrabold text-black mt-1.5 truncate tracking-tighter">
           ₹{summary.totalCharges.toLocaleString("en-IN")}
         </p>
       </div>
 
-      {/* Total Taxes */}
-      <div className="
-bg-white
-rounded-xl
-shadow-md
-border-l-4
-border-red-500
-p-5
-">
-        <h3 className="text-gray-500">Total Taxes</h3>
-        <p className="text-3xl font-bold text-black">
+      {/* Total Taxes - Soft Sage Green */}
+      <div className="bg-[#D1FAE5] rounded-2xl shadow-sm p-3.5 border border-emerald-200/50 min-w-0 text-left pl-3">
+        <h3 className="text-gray-700 text-xs sm:text-sm font-semibold tracking-wide truncate">
+          Total Taxes
+        </h3>
+        <p className="text-lg xl:text-xl 2xl:text-2xl font-extrabold text-black mt-1.5 truncate tracking-tighter">
           ₹{summary.totalTaxes.toLocaleString("en-IN")}
         </p>
       </div>
 
-      {/* Merchant Discount */}
-      <div className="
-bg-white
-rounded-xl
-shadow-md
-border-l-4
-border-pink-500
-p-5
-">
-        <h3 className="text-gray-500">Merchant Discount</h3>
-        <p className="text-3xl font-bold text-black">
+      {/* Merchant Discount - Soft Sky Blue */}
+      <div className="bg-[#E0F2FE] rounded-2xl shadow-sm p-3.5 border border-sky-200/50 min-w-0 text-left pl-3">
+        <h3 className="text-gray-700 text-xs sm:text-sm font-semibold tracking-wide truncate">
+          Merchant Discount
+        </h3>
+        <p className="text-lg xl:text-xl 2xl:text-2xl font-extrabold text-black mt-1.5 truncate tracking-tighter">
           ₹{summary.totalMerchantDiscount.toLocaleString("en-IN")}
         </p>
       </div>
-
     </div>
-    
   );
 }

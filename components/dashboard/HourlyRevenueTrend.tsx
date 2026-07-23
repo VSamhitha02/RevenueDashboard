@@ -15,63 +15,65 @@ interface HourlyRevenueTrendProps {
   data: {
     hour: number;
     hourLabel: string;
-    offlineRevenue: number;
-    onlineRevenue: number;
-    totalRevenue: number;
+    revenue: number;
+    average: number;
   }[];
-  source: "All" | "Offline" | "Online";
 }
 
-export default function HourlyRevenueTrend({
-  data,
-  source,
-}: HourlyRevenueTrendProps) {
+export default function HourlyRevenueTrend({ data }: HourlyRevenueTrendProps) {
   return (
-    <div className="bg-white rounded-xl shadow p-6">
+    <div className="bg-yellow-50 rounded-xl shadow p-6">
       <h2 className="text-xl font-semibold mb-4 text-black">
         Hourly Revenue Trend
       </h2>
 
-      <ResponsiveContainer width="100%" height={350}>
-        <LineChart data={data}>
+      <ResponsiveContainer width="100%" height={400}>
+        <LineChart data={data} margin={{ top: 10, right: 20, bottom: 40, left: 20 }}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="hourLabel" />
-          <YAxis />
-          <Tooltip />
+          <XAxis
+            dataKey="hourLabel"
+            interval={0}
+            angle={-45}
+            textAnchor="end"
+            height={60}
+          />
+          <YAxis tickFormatter={(value) => `₹${Number(value).toLocaleString("en-IN")}`} />
+          <Tooltip
+  contentStyle={{
+    backgroundColor: "#f9f7f7",
+    border: "1px solid #f6f3f3",
+    borderRadius: "8px",
+    color: "#060606",
+  }}
+  labelStyle={{
+    color: "#090909",
+    fontWeight: 600,
+  }}
+  itemStyle={{
+    color: "#0b0a0a",
+  }}
+  formatter={(value) => `₹${Number(value).toLocaleString("en-IN")}`}
+/>
           <Legend />
 
-          {(source === "All" || source === "Offline") && (
-            <Line
-              type="monotone"
-              dataKey="offlineRevenue"
-              name="Offline Revenue"
-              stroke="#2563eb"
-              strokeWidth={2}
-              dot={false}
-            />
-          )}
+          <Line
+            type="monotone"
+            dataKey="revenue"
+            name="Revenue"
+            stroke="#2563eb"
+            strokeWidth={2}
+            dot={false}
+          />
 
-          {(source === "All" || source === "Online") && (
-            <Line
-              type="monotone"
-              dataKey="onlineRevenue"
-              name="Online Revenue"
-              stroke="#f97316"
-              strokeWidth={2}
-              dot={false}
-            />
-          )}
-
-          {source === "All" && (
-            <Line
-              type="monotone"
-              dataKey="totalRevenue"
-              name="Total Revenue"
-              stroke="#16a34a"
-              strokeWidth={2}
-              dot={false}
-            />
-          )}
+          <Line
+            type="monotone"
+            dataKey="average"
+            name="Average"
+            stroke="#dc2626"
+            strokeWidth={2}
+            strokeDasharray="5 5"
+            dot={false}
+          />
         </LineChart>
       </ResponsiveContainer>
     </div>

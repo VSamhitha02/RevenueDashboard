@@ -33,7 +33,7 @@ export default function OrderTypeRevenueAnalysis({ data }: Props) {
     (item.zomato ?? 0),
 }));
   return (
-    <div className="bg-white rounded-lg shadow-md p-5">
+    <div className="bg-purple-100 rounded-lg shadow-md p-5">
       <h2 className="text-xl font-semibold mb-4 text-black">
         Order Type Revenue Analysis
       </h2>
@@ -61,6 +61,16 @@ export default function OrderTypeRevenueAnalysis({ data }: Props) {
           />
 
 <Tooltip
+  labelFormatter={(label) =>
+    new Date(label).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+    })
+  }
+  labelStyle={{
+    color: "#000",
+    fontWeight: 600,
+  }}
   formatter={(value: any, name: any) => [
     `₹${Number(value).toLocaleString("en-IN")}`,
     name,
