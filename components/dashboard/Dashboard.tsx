@@ -25,8 +25,11 @@ import {
   getOverallAnalysis,
   getHourlyRevenueTrend,
 } from "@/utils/chartData";
-
-export default function Dashboard() {
+interface DashboardProps {
+  fseId: string;
+}
+export default function Dashboard({ fseId }: DashboardProps) {
+  
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [hourlySource, setHourlySource] = useState("All");
@@ -45,7 +48,7 @@ export default function Dashboard() {
     async function fetchData() {
       try {
         const response = await getRevenueDashboard({
-          fseIds: ["8iAd7dWWxD5XLz50Dv0l"],
+          fseIds:  [fseId],
           startDate: "2026-07-13 04:00:00",
           endDate: "2026-07-20 04:00:00",
           orderTypes: [],
