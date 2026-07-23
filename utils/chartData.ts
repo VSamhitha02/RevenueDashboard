@@ -533,39 +533,55 @@ export function getItemSegmentDashboard(rawData: any, selectedSegment: string) {
 }
 
 function formatHour(h: number): string {
-  return `${h % 12 === 0 ? 12 : h % 12} ${h < 12 ? "AM" : "PM"}`;
+  const hour = ((h % 24) + 24) % 24;
+  return `${hour % 12 === 0 ? 12 : hour % 12} ${hour < 12 ? "AM" : "PM"}`;
 }
 
-export function getHourlyRevenueTrend(rawData: any) {
+export function getHourlyRevenueTrend(rawData: any, cutoffHour: number = 4) {
   const data = normalizeData(rawData);
 
   const offline = data.offline_revenue_hour_wise ?? [];
   const online = data.online_revenue_hour_wise ?? [];
 
-  const hours = Array.from({ length: 24 }, (_, i) => ({
-    hour: i,
-    hourLabel: formatHour(i),
-    revenue: 0,
-  }));
+  // 25 points: cutoffHour -> ... -> cutoffHour again (next day),
+  // so the chart visually spans a full 4 AM to 4 AM cycle.
+  const hours = Array.from({ length: 25 }, (_, i) => {
+    const actualHour = (cutoffHour + i) % 24;
+    return {
+      hour: actualHour,
+      hourLabel: formatHour(actualHour),
+      revenue: 0,
+    };
+  });
+
+  // Map actual clock hour -> FIRST matching index (so real orderHour data
+  // lands on the first occurrence, not the duplicated closing point).
+  const hourToIndex = new Map<number, number>();
+  hours.forEach((h, idx) => {
+    if (!hourToIndex.has(h.hour)) hourToIndex.set(h.hour, idx);
+  });
 
   offline.forEach((item: any) => {
     const hour = Number(item.orderHour);
     const rev = Number(item.totalRevenue ?? item.itemTotal ?? 0);
-    if (!isNaN(hour) && hours[hour]) {
-      hours[hour].revenue += rev;
+    const idx = hourToIndex.get(hour);
+    if (!isNaN(hour) && idx !== undefined) {
+      hours[idx].revenue += rev;
     }
   });
 
   online.forEach((item: any) => {
     const hour = Number(item.orderHour);
     const rev = Number(item.totalRevenue ?? item.itemTotal ?? 0);
-    if (!isNaN(hour) && hours[hour]) {
-      hours[hour].revenue += rev;
+    const idx = hourToIndex.get(hour);
+    if (!isNaN(hour) && idx !== undefined) {
+      hours[idx].revenue += rev;
     }
   });
 
-  const totalRevenue = hours.reduce((sum, h) => sum + h.revenue, 0);
-  const average = totalRevenue / hours.length;
+  // Average computed over the 24 real hours, not the duplicated 25th point
+  const totalRevenue = hours.slice(0, 24).reduce((sum, h) => sum + h.revenue, 0);
+  const average = totalRevenue / 24;
 
   return hours.map((h) => ({ ...h, average }));
 }

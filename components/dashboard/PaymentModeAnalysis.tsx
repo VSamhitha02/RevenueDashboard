@@ -29,9 +29,10 @@ type Props = {
 
 const formatAmount = (value: number) => {
   if (value >= 100000) {
-    return `${(value / 100000).toFixed(1)}L`;
+    return `₹${(value / 100000).toFixed(1)}L`;
   }
-  return value.toString();
+
+  return `₹${Number(value).toLocaleString("en-IN")}`;
 };
 
 export default function PaymentModeAnalysis({ pieData, barData }: Props) {
@@ -110,7 +111,15 @@ export default function PaymentModeAnalysis({ pieData, barData }: Props) {
 
           <XAxis dataKey="date" />
 
-          <YAxis tickFormatter={(value) => formatAmount(value)} />
+         <YAxis
+  tickFormatter={(value) => {
+    if (value >= 100000) {
+      return `₹${(value / 100000).toFixed(1)}L`;
+    }
+
+    return `₹${Number(value).toLocaleString("en-IN")}`;
+  }}
+/>
 
           {/* <Tooltip
             labelStyle={{
@@ -150,10 +159,11 @@ export default function PaymentModeAnalysis({ pieData, barData }: Props) {
           <Bar dataKey="gateway" fill="#16a34a" name="Gateway">
             <LabelList
               dataKey="gateway"
-              position="top"
+              position="inside"
               fill="#111827"
               fontSize={16}
               fontWeight="700"
+              offset={8}
               formatter={(value: any) => formatAmount(value)}
             />
           </Bar>
@@ -164,7 +174,8 @@ export default function PaymentModeAnalysis({ pieData, barData }: Props) {
               fontSize={16}
               fontWeight="700"
               dataKey="cash"
-              position="top"
+              position="inside"
+              offset={8}
               formatter={(value: any) => formatAmount(value)}
             />
           </Bar>
@@ -173,9 +184,10 @@ export default function PaymentModeAnalysis({ pieData, barData }: Props) {
             <LabelList
               fill="#111827"
               dataKey="noCharge"
-              position="top"
+              position="inside"
               fontSize={16}
               fontWeight="700"
+              offset={8}
               formatter={(value: any) => formatAmount(value)}
             />
           </Bar>
@@ -184,9 +196,10 @@ export default function PaymentModeAnalysis({ pieData, barData }: Props) {
             <LabelList
               fill="#111827"
               dataKey="notPaid"
-              position="top"
+              position="inside"
               fontSize={16}
               fontWeight="700"
+              offset={8}
               formatter={(value: any) => formatAmount(value)}
             />
           </Bar>

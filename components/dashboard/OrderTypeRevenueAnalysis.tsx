@@ -59,7 +59,10 @@ export default function OrderTypeRevenueAnalysis({ data, orderTypes, orderTypeLa
             }
           />
 
-          <YAxis tickFormatter={(value) => `₹${Number(value).toLocaleString()}`} />
+         <YAxis
+  width={80}
+  tickFormatter={(value) => `₹${Number(value).toLocaleString("en-IN")}`}
+/>
 
           <Tooltip
             labelFormatter={(label) =>
