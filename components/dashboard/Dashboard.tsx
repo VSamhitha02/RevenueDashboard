@@ -74,9 +74,9 @@ export default function Dashboard({ fseId }: DashboardProps) {
 
   
 
-  if (!data) {
-    return <div className="p-10">No data found</div>;
-  }
+  // if (!data) {
+  //   return <div className="p-10">No data found</div>;
+  // }
 
   const hourlyRevenue = getHourlyRevenueTrend(data);
 
