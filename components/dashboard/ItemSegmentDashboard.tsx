@@ -11,6 +11,7 @@ import {
   Tooltip,
   Legend,
   ReferenceLine,
+  LabelList
 } from "recharts";
 
 import { getItemSegmentDashboard } from "@/utils/chartData";
@@ -21,6 +22,17 @@ type Props = {
 
 const formatCurrency = (value: number) =>
   `₹${Number(value).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+const formatChartValue = (value: number) => {
+  if (value >= 10000000) {
+    return `₹${Math.round(value / 10000000)}Cr`;
+  }
+
+  if (value >= 100000) {
+    return `₹${Math.round(value / 100000)}L`;
+  }
+
+  return `₹${Number(value).toLocaleString("en-IN")}`;
+};
 
 // Palette cycles if there are more order types than colors.
 const BAR_COLORS = ["#22c55e", "#f97316", "#3b82f6", "#a855f7", "#ef4444", "#14b8a6"];
@@ -97,7 +109,15 @@ export default function ItemSegmentDashboard({ data }: Props) {
         </h3>
 
         <ResponsiveContainer width="100%" height={420}>
-          <ComposedChart data={chartData}>
+          <ComposedChart
+  data={chartData}
+  margin={{
+    top: 40,
+    right: 20,
+    left: 20,
+    bottom: 20,
+  }}
+>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" tick={{ fill: "#000000" }} />
             <YAxis
@@ -118,14 +138,26 @@ export default function ItemSegmentDashboard({ data }: Props) {
               label={{ value: "Average", position: "right", fill: "#3b82f6" }}
             />
 
-            {orderTypes.map((type: string, idx: number) => (
-              <Bar
-                key={type}
-                dataKey={type}
-                name={orderTypeLabels[idx]}
-                fill={BAR_COLORS[idx % BAR_COLORS.length]}
-              />
-            ))}
+{orderTypes.map((type: string, idx: number) => (
+  <Bar
+    key={type}
+    dataKey={type}
+    name={orderTypeLabels[idx]}
+    fill={BAR_COLORS[idx % BAR_COLORS.length]}
+    radius={[4, 4, 0, 0]}
+  >
+    <LabelList
+      dataKey={type}
+      position="top"
+      fill="#000000"
+      fontSize={13}
+      fontWeight="700"
+      formatter={(value: any) => 
+        value > 0 ? formatChartValue(Number(value)) : ""
+      }
+    />
+  </Bar>
+))}
           </ComposedChart>
         </ResponsiveContainer>
       </div>

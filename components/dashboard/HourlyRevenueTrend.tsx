@@ -40,7 +40,7 @@ function renderStaggeredLabel(props: any) {
   return (
     <text
       x={x + width / 2}
-      y={labelY}
+      y={y - 10}   // places label above the bar
       textAnchor="middle"
       fontSize={14}
       fontWeight={700}

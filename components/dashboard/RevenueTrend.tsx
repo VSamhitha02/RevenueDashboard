@@ -20,10 +20,15 @@ type Props = {
 };
 
 const formatNumber = (value: number) => {
-  if (value >= 10000000) return `${(value / 10000000).toFixed(1)}Cr`;
-  if (value >= 100000) return `${(value / 100000).toFixed(1)}L`;
-  if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
-  return value.toString();
+  if (value >= 10000000) {
+    return `₹${Math.round(value / 10000000)}Cr`;
+  }
+
+  if (value >= 100000) {
+    return `₹${Math.round(value / 100000)}L`;
+  }
+
+  return `₹${Number(value).toLocaleString("en-IN")}`;
 };
 
 export default function RevenueTrend({ data, dateOption }: Props) {

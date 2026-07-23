@@ -20,11 +20,11 @@ type Props = {
 
 const formatAmount = (value: number) => {
   if (value >= 100000) {
-    return `${(value / 100000).toFixed(1)}L`;
+    return `₹${(value / 100000).toFixed(1)}L`;
   }
 
-  // Show complete number for anything below 1 lakh
-  return value.toLocaleString("en-IN");
+  // Show full number with commas below 1 lakh
+  return `₹${Number(value).toLocaleString("en-IN")}`;
 };
 
 // Cycles if there are more order types than colors.

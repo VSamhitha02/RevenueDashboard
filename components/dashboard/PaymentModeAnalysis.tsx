@@ -56,7 +56,6 @@ export default function PaymentModeAnalysis({ pieData, barData }: Props) {
     <div className="bg-green-50 rounded-lg shadow-md p-5">
       <h2 className="text-xl font-semibold text-black mb-6">
         Payment Mode Revenue
-        Payment Mode Revenue
       </h2>
 
       {/* ---------------- PIE CHART ---------------- */}
@@ -159,7 +158,7 @@ export default function PaymentModeAnalysis({ pieData, barData }: Props) {
           <Bar dataKey="gateway" fill="#16a34a" name="Gateway">
             <LabelList
               dataKey="gateway"
-              position="inside"
+              position="top"
               fill="#111827"
               fontSize={16}
               fontWeight="700"
@@ -174,7 +173,7 @@ export default function PaymentModeAnalysis({ pieData, barData }: Props) {
               fontSize={16}
               fontWeight="700"
               dataKey="cash"
-              position="inside"
+              position="top"
               offset={8}
               formatter={(value: any) => formatAmount(value)}
             />
@@ -184,7 +183,7 @@ export default function PaymentModeAnalysis({ pieData, barData }: Props) {
             <LabelList
               fill="#111827"
               dataKey="noCharge"
-              position="inside"
+              position="top"
               fontSize={16}
               fontWeight="700"
               offset={8}
@@ -196,7 +195,7 @@ export default function PaymentModeAnalysis({ pieData, barData }: Props) {
             <LabelList
               fill="#111827"
               dataKey="notPaid"
-              position="inside"
+              position="top"
               fontSize={16}
               fontWeight="700"
               offset={8}
