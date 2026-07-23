@@ -1,14 +1,15 @@
 "use client";
 
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
   ResponsiveContainer,
+  ComposedChart,
+  Bar,
+  Line,
 } from "recharts";
 
 interface HourlyRevenueTrendProps {
@@ -28,7 +29,7 @@ export default function HourlyRevenueTrend({ data }: HourlyRevenueTrendProps) {
       </h2>
 
       <ResponsiveContainer width="100%" height={400}>
-        <LineChart data={data} margin={{ top: 10, right: 20, bottom: 40, left: 20 }}>
+        <ComposedChart data={data} margin={{ top: 10, right: 20, bottom: 40, left: 20 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
             dataKey="hourLabel"
@@ -36,34 +37,31 @@ export default function HourlyRevenueTrend({ data }: HourlyRevenueTrendProps) {
             angle={-45}
             textAnchor="end"
             height={60}
+            tick={{ fill: "#000000" }}
           />
-          <YAxis tickFormatter={(value) => `₹${Number(value).toLocaleString("en-IN")}`} />
+          <YAxis
+            tickFormatter={(value) => `₹${Number(value).toLocaleString("en-IN")}`}
+            tick={{ fill: "#000000" }}
+          />
           <Tooltip
-  contentStyle={{
-    backgroundColor: "#f9f7f7",
-    border: "1px solid #f6f3f3",
-    borderRadius: "8px",
-    color: "#060606",
-  }}
-  labelStyle={{
-    color: "#090909",
-    fontWeight: 600,
-  }}
-  itemStyle={{
-    color: "#0b0a0a",
-  }}
-  formatter={(value) => `₹${Number(value).toLocaleString("en-IN")}`}
-/>
-          <Legend />
-
-          <Line
-            type="monotone"
-            dataKey="revenue"
-            name="Revenue"
-            stroke="#2563eb"
-            strokeWidth={2}
-            dot={false}
+            contentStyle={{
+              backgroundColor: "#f9f7f7",
+              border: "1px solid #f6f3f3",
+              borderRadius: "8px",
+              color: "#000000",
+            }}
+            labelStyle={{
+              color: "#000000",
+              fontWeight: 600,
+            }}
+            itemStyle={{
+              color: "#000000",
+            }}
+            formatter={(value) => `₹${Number(value).toLocaleString("en-IN")}`}
           />
+          <Legend wrapperStyle={{ color: "#000000" }} />
+
+          <Bar dataKey="revenue" name="Revenue" fill="#2563eb" radius={[4, 4, 0, 0]} />
 
           <Line
             type="monotone"
@@ -74,7 +72,7 @@ export default function HourlyRevenueTrend({ data }: HourlyRevenueTrendProps) {
             strokeDasharray="5 5"
             dot={false}
           />
-        </LineChart>
+        </ComposedChart>
       </ResponsiveContainer>
     </div>
   );

@@ -25,7 +25,6 @@ const PIE_COLORS = {
 type Props = {
   pieData: any[];
   barData: any[];
-  orderType: string;
 };
 
 const formatAmount = (value: number) => {
@@ -34,41 +33,26 @@ const formatAmount = (value: number) => {
   return value.toString();
 };
 
-export default function PaymentModeAnalysis({
-  pieData,
-  barData,
-  orderType,
-}: Props) {
-  const title =
-    orderType === "dineIn"
-      ? "Payment Mode Revenue (Dine In)"
-      : orderType === "takeAway"
-      ? "Payment Mode Revenue (Take Away)"
-      : "Payment Mode Revenue (Default)";
-
+export default function PaymentModeAnalysis({ pieData, barData }: Props) {
   const totalRevenue = barData.reduce(
     (sum: number, item: any) =>
-      sum +
-      item.cash +
-      item.gateway +
-      item.noCharge +
-      item.notPaid,
+      sum + item.cash + item.gateway + item.noCharge + item.notPaid,
     0
   );
-const paymentNames: Record<string, string> = {
-  cash: "Cash",
-  gateway: "Gateway",
-  notPaid: "Not Paid",
-  noCharge: "Others",
-};
 
-  const average =
-    barData.length === 0 ? 0 : totalRevenue / barData.length;
+  const paymentNames: Record<string, string> = {
+    cash: "Cash",
+    gateway: "Gateway",
+    notPaid: "Not Paid",
+    noCharge: "Others",
+  };
+
+  const average = barData.length === 0 ? 0 : totalRevenue / barData.length;
 
   return (
     <div className="bg-green-50 rounded-lg shadow-md p-5">
       <h2 className="text-xl font-semibold text-black mb-6">
-      Payment Mode Revenue
+        Payment Mode Revenue
       </h2>
 
       {/* ---------------- PIE CHART ---------------- */}
@@ -84,32 +68,28 @@ const paymentNames: Record<string, string> = {
               cy="50%"
               outerRadius={120}
               label={({ percent }) => {
-  if (!percent || percent < 0.03) return "";
-  return `${(percent * 100).toFixed(0)}%`;
-}}
+                if (!percent || percent < 0.03) return "";
+                return `${(percent * 100).toFixed(0)}%`;
+              }}
             >
               {pieData.map((entry, index) => (
                 <Cell
                   key={index}
-                  fill={
-                    PIE_COLORS[
-                      entry.name as keyof typeof PIE_COLORS
-                    ] || "#040404"
-                  }
+                  fill={PIE_COLORS[entry.name as keyof typeof PIE_COLORS] || "#040404"}
                 />
               ))}
             </Pie>
 
-<Tooltip
-  labelStyle={{
-    color: "#000",
-    fontWeight: 600,
-  }}
-  formatter={(value: any, name: any) => [
-    `₹${Number(value).toLocaleString("en-IN")}`,
-    paymentNames[name] || name,
-  ]}
-/>
+            <Tooltip
+              labelStyle={{
+                color: "#000",
+                fontWeight: 600,
+              }}
+              formatter={(value: any, name: any) => [
+                `₹${Number(value).toLocaleString("en-IN")}`,
+                paymentNames[name] || name,
+              ]}
+            />
 
             <Legend />
           </PieChart>
@@ -124,20 +104,15 @@ const paymentNames: Record<string, string> = {
 
           <XAxis dataKey="date" />
 
-          <YAxis
-            tickFormatter={(value) => formatAmount(value)}
-          />
+          <YAxis tickFormatter={(value) => formatAmount(value)} />
 
-         <Tooltip
-  labelStyle={{
-    color: "#000",
-    fontWeight: 600,
-  }}
-  formatter={(value: any) => [
-    `₹${Number(value).toLocaleString("en-IN")}`,
-    "Revenue",
-  ]}
-/>
+          <Tooltip
+            labelStyle={{
+              color: "#000",
+              fontWeight: 600,
+            }}
+            formatter={(value: any) => [`₹${Number(value).toLocaleString("en-IN")}`, "Revenue"]}
+          />
 
           <Legend />
 
@@ -153,11 +128,7 @@ const paymentNames: Record<string, string> = {
             }}
           />
 
-          <Bar
-            dataKey="gateway"
-            fill="#16a34a"
-            name="Gateway"
-          >
+          <Bar dataKey="gateway" fill="#16a34a" name="Gateway">
             <LabelList
               dataKey="gateway"
               position="top"
@@ -165,11 +136,7 @@ const paymentNames: Record<string, string> = {
             />
           </Bar>
 
-          <Bar
-            dataKey="cash"
-            fill="#2563eb"
-            name="Cash"
-          >
+          <Bar dataKey="cash" fill="#2563eb" name="Cash">
             <LabelList
               dataKey="cash"
               position="top"
@@ -177,11 +144,7 @@ const paymentNames: Record<string, string> = {
             />
           </Bar>
 
-          <Bar
-            dataKey="noCharge"
-            fill="#ef4444"
-            name="Others"
-          >
+          <Bar dataKey="noCharge" fill="#ef4444" name="Others">
             <LabelList
               dataKey="noCharge"
               position="top"
@@ -189,11 +152,7 @@ const paymentNames: Record<string, string> = {
             />
           </Bar>
 
-          <Bar
-            dataKey="notPaid"
-            fill="#f97316"
-            name="Not Paid"
-          >
+          <Bar dataKey="notPaid" fill="#f97316" name="Not Paid">
             <LabelList
               dataKey="notPaid"
               position="top"
