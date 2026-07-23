@@ -537,7 +537,7 @@ function formatHour(h: number): string {
   return `${hour % 12 === 0 ? 12 : hour % 12} ${hour < 12 ? "AM" : "PM"}`;
 }
 
-export function getHourlyRevenueTrend(rawData: any, cutoffHour: number = 4) {
+export function getHourlyRevenueTrend(rawData: any, cutoffHour: number = 5) {
   const data = normalizeData(rawData);
 
   const offline = data.offline_revenue_hour_wise ?? [];

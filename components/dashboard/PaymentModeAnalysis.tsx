@@ -103,7 +103,7 @@ export default function PaymentModeAnalysis({ pieData, barData }: Props) {
       </div>
 
       {/* ---------------- BAR CHART ---------------- */}
-
+<div className="mt-10"/>
       <ResponsiveContainer width="100%" height={380}>
         <BarChart data={barData} margin={{ top: 35 }}>
           <CartesianGrid strokeDasharray="3 3" />
