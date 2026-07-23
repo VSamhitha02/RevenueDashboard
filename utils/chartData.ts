@@ -543,9 +543,9 @@ export function getHourlyRevenueTrend(rawData: any, cutoffHour: number = 5) {
   const offline = data.offline_revenue_hour_wise ?? [];
   const online = data.online_revenue_hour_wise ?? [];
 
-  // 25 points: cutoffHour -> ... -> cutoffHour again (next day),
-  // so the chart visually spans a full 4 AM to 4 AM cycle.
-  const hours = Array.from({ length: 25 }, (_, i) => {
+  // 24 points: cutoffHour -> ... -> (cutoffHour - 1) wrapped around.
+  // e.g. cutoffHour = 5 -> [5 AM, 6 AM, ..., 11 PM, 12 AM, ..., 4 AM]
+  const hours = Array.from({ length: 24 }, (_, i) => {
     const actualHour = (cutoffHour + i) % 24;
     return {
       hour: actualHour,
@@ -554,12 +554,8 @@ export function getHourlyRevenueTrend(rawData: any, cutoffHour: number = 5) {
     };
   });
 
-  // Map actual clock hour -> FIRST matching index (so real orderHour data
-  // lands on the first occurrence, not the duplicated closing point).
-  const hourToIndex = new Map<number, number>();
-  hours.forEach((h, idx) => {
-    if (!hourToIndex.has(h.hour)) hourToIndex.set(h.hour, idx);
-  });
+  // Map actual clock hour -> its position in the `hours` array above
+  const hourToIndex = new Map(hours.map((h, idx) => [h.hour, idx]));
 
   offline.forEach((item: any) => {
     const hour = Number(item.orderHour);
@@ -579,9 +575,8 @@ export function getHourlyRevenueTrend(rawData: any, cutoffHour: number = 5) {
     }
   });
 
-  // Average computed over the 24 real hours, not the duplicated 25th point
-  const totalRevenue = hours.slice(0, 24).reduce((sum, h) => sum + h.revenue, 0);
-  const average = totalRevenue / 24;
+  const totalRevenue = hours.reduce((sum, h) => sum + h.revenue, 0);
+  const average = totalRevenue / hours.length;
 
   return hours.map((h) => ({ ...h, average }));
 }
