@@ -105,7 +105,7 @@ export default function PaymentModeAnalysis({ pieData, barData }: Props) {
       {/* ---------------- BAR CHART ---------------- */}
 
       <ResponsiveContainer width="100%" height={380}>
-        <BarChart data={barData}>
+        <BarChart data={barData} margin={{ top: 35 }}>
           <CartesianGrid strokeDasharray="3 3" />
 
           <XAxis dataKey="date" />
