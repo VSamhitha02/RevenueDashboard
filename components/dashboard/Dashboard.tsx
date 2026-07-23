@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { getRevenueDashboard } from "@/lib/axios";
 import { getDateRange, DateFilterOption } from "@/utils/dateRanges";
 
-import FilterBar from "./FilterBar";
 import DateFilter from "./DateFilter";
 import SummaryCards from "./SummaryCards";
 import RevenueTrend from "./RevenueTrend";
@@ -20,16 +19,18 @@ import {
   getPaymentModeAnalysis,
   getHourlyRevenueTrend,
 } from "@/utils/chartData";
+
 interface DashboardProps {
   fseId: string;
 }
+
 export default function Dashboard({ fseId }: DashboardProps) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [hourlySource, setHourlySource] = useState("All");
-  const [orderType, setOrderType] = useState("All");
   const [dateOption, setDateOption] = useState<DateFilterOption>("Today");
   const [selectedRange, setSelectedRange] = useState("1D");
+
   async function fetchData(range: { startDate: string; endDate: string }) {
     try {
       setLoading(true);
@@ -41,7 +42,6 @@ export default function Dashboard({ fseId }: DashboardProps) {
         cutoffHour: 4,
       });
 
-      // console.log("API Response:", response);
       setData(response);
     } catch (err) {
       console.error(err);
@@ -64,8 +64,6 @@ export default function Dashboard({ fseId }: DashboardProps) {
   ) {
     setDateOption(option);
 
-    // only re-fetch immediately for non-custom options,
-    // or once both custom dates are filled in
     if (option === "Custom Date" && !customDate) return;
     if (option === "Custom Date Range" && (!customStart || !customEnd))
       return;
@@ -82,20 +80,11 @@ export default function Dashboard({ fseId }: DashboardProps) {
 
   const hourlyRevenue = getHourlyRevenueTrend(data);
 
-  // in Dashboard.tsx, after data is fetched
-  console.log("Offline Hour Wise:", data.offline_revenue_hour_wise);
-  console.log("Online Hour Wise:", data.online_revenue_hour_wise);
-
   // Generate all chart data AFTER data is available
-  const summary = getSummaryData(data, orderType);
-  const revenueTrend = getRevenueTrend(data, orderType);
-  const paymentMode = getPaymentModeAnalysis(data, orderType);
-  const orderTypeRevenue = getOrderTypeRevenueAnalysis(data, orderType);
-
-  // Uncomment later when required
-  // const dailyAverageTrend = getDailyAverageTrend(data, orderType);
-  // const revenueLeakage = getRevenueLeakageAnalysis(data, orderType);
-  // const overallAnalysis = getOverallAnalysis(data);
+  const summary = getSummaryData(data);
+  const revenueTrend = getRevenueTrend(data);
+  const paymentMode = getPaymentModeAnalysis(data);
+  const orderTypeRevenue = getOrderTypeRevenueAnalysis(data);
 
   return (
     <main className="min-h-screen bg-slate-100">
@@ -129,9 +118,9 @@ export default function Dashboard({ fseId }: DashboardProps) {
 
         <div className="mt-8">
           <RevenueTrend
-  data={revenueTrend}
-  dateOption={dateOption}
-/>
+            data={revenueTrend}
+            dateOption={dateOption}
+          />
         </div>
 
         <div className="mt-4">
@@ -142,41 +131,20 @@ export default function Dashboard({ fseId }: DashboardProps) {
           <PaymentModeAnalysis
             pieData={paymentMode.pieData}
             barData={paymentMode.barData}
-            orderType={orderType}
           />
         </div>
 
         <div className="mt-8">
-          <OrderTypeRevenueAnalysis data={orderTypeRevenue} />
+          <OrderTypeRevenueAnalysis
+            data={orderTypeRevenue.rows}
+            orderTypes={orderTypeRevenue.orderTypes}
+            orderTypeLabels={orderTypeRevenue.orderTypeLabels}
+          />
         </div>
 
         <div className="mt-8">
           <ItemSegmentDashboard data={data} />
         </div>
-
-        {/*
-        <RevenueLeakageAnalysis
-          data={revenueLeakage}
-          orderType={orderType}
-        />
-
-        <DailyAverageTrend
-          data={dailyAverageTrend}
-          orderType={orderType}
-        />
-
-        <OverallAnalysis data={overallAnalysis} />
-        */}
-
-        {/* <select
-          value={hourlySource}
-          onChange={(e) => setHourlySource(e.target.value)}
-          className="mt-4 border rounded-md px-3 py-2 text-black bg-white"
-        >
-          <option value="All">All</option>
-          <option value="Offline">Offline</option>
-          <option value="Online">Online</option>
-        </select> */}
       </div>
     </main>
   );

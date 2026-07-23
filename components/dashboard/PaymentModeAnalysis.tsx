@@ -25,38 +25,30 @@ const PIE_COLORS = {
 type Props = {
   pieData: any[];
   barData: any[];
-  orderType: string;
 };
 
 const formatAmount = (value: number) => {
-  if (value >= 100000) return `${(value / 100000).toFixed(1)}L`;
-  if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
-  return value.toString();
+  if (value >= 100000) {
+    return `₹${(value / 100000).toFixed(1)}L`;
+  }
+
+  return `₹${Number(value).toLocaleString("en-IN")}`;
 };
 
-export default function PaymentModeAnalysis({
-  pieData,
-  barData,
-  orderType,
-}: Props) {
-  const title =
-    orderType === "dineIn"
-      ? "Payment Mode Revenue (Dine In)"
-      : orderType === "takeAway"
-        ? "Payment Mode Revenue (Take Away)"
-        : "Payment Mode Revenue (Default)";
-
+export default function PaymentModeAnalysis({ pieData, barData }: Props) {
   const totalRevenue = barData.reduce(
     (sum: number, item: any) =>
       sum + item.cash + item.gateway + item.noCharge + item.notPaid,
-    0,
+    0
   );
+
   const paymentNames: Record<string, string> = {
     cash: "Cash",
     gateway: "Gateway",
     notPaid: "Not Paid",
     noCharge: "Others",
   };
+
 
   const average = barData.length === 0 ? 0 : totalRevenue / barData.length;
 
@@ -118,7 +110,15 @@ export default function PaymentModeAnalysis({
 
           <XAxis dataKey="date" />
 
-          <YAxis tickFormatter={(value) => formatAmount(value)} />
+         <YAxis
+  tickFormatter={(value) => {
+    if (value >= 100000) {
+      return `₹${(value / 100000).toFixed(1)}L`;
+    }
+
+    return `₹${Number(value).toLocaleString("en-IN")}`;
+  }}
+/>
 
           {/* <Tooltip
             labelStyle={{
@@ -159,30 +159,46 @@ export default function PaymentModeAnalysis({
             <LabelList
               dataKey="gateway"
               position="top"
+              fill="#111827"
+              fontSize={16}
+              fontWeight="700"
+              offset={8}
               formatter={(value: any) => formatAmount(value)}
             />
           </Bar>
 
           <Bar dataKey="cash" fill="#2563eb" name="Cash">
             <LabelList
+              fill="#111827"
+              fontSize={16}
+              fontWeight="700"
               dataKey="cash"
               position="top"
+              offset={8}
               formatter={(value: any) => formatAmount(value)}
             />
           </Bar>
 
           <Bar dataKey="noCharge" fill="#ef4444" name="Others">
             <LabelList
+              fill="#111827"
               dataKey="noCharge"
               position="top"
+              fontSize={16}
+              fontWeight="700"
+              offset={8}
               formatter={(value: any) => formatAmount(value)}
             />
           </Bar>
 
           <Bar dataKey="notPaid" fill="#f97316" name="Not Paid">
             <LabelList
+              fill="#111827"
               dataKey="notPaid"
               position="top"
+              fontSize={16}
+              fontWeight="700"
+              offset={8}
               formatter={(value: any) => formatAmount(value)}
             />
           </Bar>
