@@ -72,9 +72,7 @@ export default function Dashboard({ fseId }: DashboardProps) {
     fetchData(range);
   }
 
-  if (loading) {
-    return <div className="p-10">Loading...</div>;
-  }
+  
 
   if (!data) {
     return <div className="p-10">No data found</div>;
@@ -95,9 +93,25 @@ export default function Dashboard({ fseId }: DashboardProps) {
           <h1 className="text-4xl font-bold text-black">
             Revenue Dashboard
           </h1>
-          <DateFilter selected={dateOption} onSelect={handleDateSelect} />
+         
         </div>
+{loading && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="bg-white rounded-xl shadow-xl px-8 py-6 flex flex-col items-center">
+      <div className="h-10 w-10 animate-spin rounded-full border-4 border-orange-500 border-t-transparent"></div>
 
+      <p className="mt-4 text-lg font-semibold text-gray-800">
+        Loading...
+      </p>
+
+      <p className="mt-1 text-sm text-gray-500">
+        Fetching dashboard data
+      </p>
+    </div>
+  </div>
+)}
+        {/* <FilterBar orderType={orderType} setOrderType={setOrderType} /> */}
+       <DateFilter selected={dateOption} onSelect={handleDateSelect} />
         <div className="mt-6">
           <SummaryCards summary={summary} />
         </div>

@@ -28,8 +28,9 @@ type Props = {
 };
 
 const formatAmount = (value: number) => {
-  if (value >= 100000) return `${(value / 100000).toFixed(1)}L`;
-  if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
+  if (value >= 100000) {
+    return `${(value / 100000).toFixed(1)}L`;
+  }
   return value.toString();
 };
 
@@ -47,11 +48,13 @@ export default function PaymentModeAnalysis({ pieData, barData }: Props) {
     noCharge: "Others",
   };
 
+
   const average = barData.length === 0 ? 0 : totalRevenue / barData.length;
 
   return (
     <div className="bg-green-50 rounded-lg shadow-md p-5">
       <h2 className="text-xl font-semibold text-black mb-6">
+        Payment Mode Revenue
         Payment Mode Revenue
       </h2>
 
@@ -75,7 +78,10 @@ export default function PaymentModeAnalysis({ pieData, barData }: Props) {
               {pieData.map((entry, index) => (
                 <Cell
                   key={index}
-                  fill={PIE_COLORS[entry.name as keyof typeof PIE_COLORS] || "#040404"}
+                  fill={
+                    PIE_COLORS[entry.name as keyof typeof PIE_COLORS] ||
+                    "#040404"
+                  }
                 />
               ))}
             </Pie>
@@ -106,12 +112,25 @@ export default function PaymentModeAnalysis({ pieData, barData }: Props) {
 
           <YAxis tickFormatter={(value) => formatAmount(value)} />
 
+          {/* <Tooltip
+            labelStyle={{
+              color: "#000",
+              fontWeight: 600,
+            }}
+            formatter={(value: any) => [
+              `₹${Number(value).toLocaleString("en-IN")}`,
+              "Revenue",
+            ]}
+          /> */}
           <Tooltip
             labelStyle={{
               color: "#000",
               fontWeight: 600,
             }}
-            formatter={(value: any) => [`₹${Number(value).toLocaleString("en-IN")}`, "Revenue"]}
+            formatter={(value: any, name) => [
+              `₹${Number(value).toLocaleString("en-IN")}`,
+              paymentNames[String(name)] || String(name),
+            ]}
           />
 
           <Legend />
@@ -132,12 +151,18 @@ export default function PaymentModeAnalysis({ pieData, barData }: Props) {
             <LabelList
               dataKey="gateway"
               position="top"
+              fill="#111827"
+              fontSize={16}
+              fontWeight="700"
               formatter={(value: any) => formatAmount(value)}
             />
           </Bar>
 
           <Bar dataKey="cash" fill="#2563eb" name="Cash">
             <LabelList
+              fill="#111827"
+              fontSize={16}
+              fontWeight="700"
               dataKey="cash"
               position="top"
               formatter={(value: any) => formatAmount(value)}
@@ -146,16 +171,22 @@ export default function PaymentModeAnalysis({ pieData, barData }: Props) {
 
           <Bar dataKey="noCharge" fill="#ef4444" name="Others">
             <LabelList
+              fill="#111827"
               dataKey="noCharge"
               position="top"
+              fontSize={16}
+              fontWeight="700"
               formatter={(value: any) => formatAmount(value)}
             />
           </Bar>
 
           <Bar dataKey="notPaid" fill="#f97316" name="Not Paid">
             <LabelList
+              fill="#111827"
               dataKey="notPaid"
               position="top"
+              fontSize={16}
+              fontWeight="700"
               formatter={(value: any) => formatAmount(value)}
             />
           </Bar>

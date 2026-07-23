@@ -19,9 +19,12 @@ type Props = {
 };
 
 const formatAmount = (value: number) => {
-  if (value >= 100000) return `${(value / 100000).toFixed(1)}L`;
-  if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
-  return value.toString();
+  if (value >= 100000) {
+    return `${(value / 100000).toFixed(1)}L`;
+  }
+
+  // Show complete number for anything below 1 lakh
+  return value.toLocaleString("en-IN");
 };
 
 // Cycles if there are more order types than colors.
@@ -43,7 +46,7 @@ export default function OrderTypeRevenueAnalysis({ data, orderTypes, orderTypeLa
       </h2>
 
       <ResponsiveContainer width="100%" height={450}>
-        <BarChart data={chartData} barGap={4} barCategoryGap="20%">
+        <BarChart data={chartData} barGap={4} barCategoryGap="20%"  margin={{ top: 8  }}>
           <CartesianGrid strokeDasharray="3 3" />
 
           <XAxis
@@ -86,12 +89,15 @@ export default function OrderTypeRevenueAnalysis({ data, orderTypes, orderTypeLa
               fill={BAR_COLORS[idx % BAR_COLORS.length]}
             >
               <LabelList
-                dataKey={idx === lastIndex ? "total" : type}
-                position={idx === lastIndex ? "top" : "center"}
-                formatter={(value: any) =>
-                  Number(value) > 0 ? formatAmount(Number(value)) : ""
-                }
-              />
+  dataKey={idx === lastIndex ? "total" : type}
+  position={idx === lastIndex ? "top" : "center"}
+  fill="#111827"          // Dark text
+  fontSize={16}
+  fontWeight="700"
+  formatter={(value: any) =>
+    Number(value) > 0 ? formatAmount(Number(value)) : ""
+  }
+/>
             </Bar>
           ))}
         </BarChart>
