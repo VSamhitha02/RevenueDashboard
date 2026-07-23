@@ -113,14 +113,14 @@ const SegmentedDateInput = forwardRef<HTMLDivElement, InputProps>(
       return digits;
     };
 
-    const makeHandler =
-      (
-        setter: (v: string) => void,
-        max: number,
-        upperBound: number,
-        nextRef: React.RefObject<HTMLInputElement> | null,
-        seg: "d" | "m" | "y",
-      ) =>
+  const makeHandler =
+  (
+    setter: (v: string) => void,
+    max: number,
+    upperBound: number,
+    nextRef: React.RefObject<HTMLInputElement | null> | null,
+    seg: "d" | "m" | "y",
+  ) =>
       (e: ChangeEvent<HTMLInputElement>) => {
         let digits = e.target.value.replace(/\D/g, "").slice(0, max);
         digits = clamp(digits, max, upperBound);
@@ -138,7 +138,10 @@ const SegmentedDateInput = forwardRef<HTMLDivElement, InputProps>(
       };
 
     const makeKeyDown =
-      (current: string, prevRef: React.RefObject<HTMLInputElement> | null) =>
+  (
+    current: string,
+    prevRef: React.RefObject<HTMLInputElement | null> | null,
+  ) =>
       (e: KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Backspace" && current === "" && prevRef?.current) {
           prevRef.current.focus();

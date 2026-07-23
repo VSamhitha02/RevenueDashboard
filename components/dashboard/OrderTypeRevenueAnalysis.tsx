@@ -28,12 +28,26 @@ const formatAmount = (value: number) => {
 };
 
 // Cycles if there are more order types than colors.
-const BAR_COLORS = ["#0ea5e9", "#f59e0b", "#ef4444", "#ec4899", "#16a34a", "#8b5cf6"];
+const BAR_COLORS = [
+  "#0ea5e9",
+  "#f59e0b",
+  "#ef4444",
+  "#ec4899",
+  "#16a34a",
+  "#8b5cf6",
+];
 
-export default function OrderTypeRevenueAnalysis({ data, orderTypes, orderTypeLabels }: Props) {
+export default function OrderTypeRevenueAnalysis({
+  data,
+  orderTypes,
+  orderTypeLabels,
+}: Props) {
   const chartData = data.map((item: any) => ({
     ...item,
-    total: orderTypes.reduce((sum: number, type: string) => sum + (item[type] ?? 0), 0),
+    total: orderTypes.reduce(
+      (sum: number, type: string) => sum + (item[type] ?? 0),
+      0,
+    ),
   }));
 
   // Top-most bar in the stack carries the "total" label above it.
@@ -46,7 +60,12 @@ export default function OrderTypeRevenueAnalysis({ data, orderTypes, orderTypeLa
       </h2>
 
       <ResponsiveContainer width="100%" height={450}>
-        <BarChart data={chartData} barGap={4} barCategoryGap="20%"  margin={{ top: 8  }}>
+        <BarChart
+          data={chartData}
+          barGap={4}
+          barCategoryGap="20%"
+          margin={{ top: 8 }}
+        >
           <CartesianGrid strokeDasharray="3 3" />
 
           <XAxis
@@ -59,10 +78,12 @@ export default function OrderTypeRevenueAnalysis({ data, orderTypes, orderTypeLa
             }
           />
 
-         <YAxis
-  width={80}
-  tickFormatter={(value) => `₹${Number(value).toLocaleString("en-IN")}`}
-/>
+          <YAxis
+            width={80}
+            tickFormatter={(value) =>
+              `₹${Number(value).toLocaleString("en-IN")}`
+            }
+          />
 
           <Tooltip
             labelFormatter={(label) =>
@@ -92,15 +113,15 @@ export default function OrderTypeRevenueAnalysis({ data, orderTypes, orderTypeLa
               fill={BAR_COLORS[idx % BAR_COLORS.length]}
             >
               <LabelList
-  dataKey={idx === lastIndex ? "total" : type}
-  position={idx === lastIndex ? "top" : "center"}
-  fill="#111827"          // Dark text
-  fontSize={16}
-  fontWeight="700"
-  formatter={(value: any) =>
-    Number(value) > 0 ? formatAmount(Number(value)) : ""
-  }
-/>
+                dataKey={idx === lastIndex ? "total" : type}
+                position={idx === lastIndex ? "top" : "center"}
+                fill="#111827" // Dark text
+                fontSize={16}
+                fontWeight="700"
+                formatter={(value: any) =>
+                  Number(value) > 0 ? formatAmount(Number(value)) : ""
+                }
+              />
             </Bar>
           ))}
         </BarChart>
