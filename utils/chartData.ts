@@ -345,10 +345,10 @@ export function getPaymentModeAnalysis(rawData: any) {
           row.cash += rev;
           break;
         case "gateway":
-        case "online":
-        case "upi":
-        case "card":
-        case "cards":
+        // case "online":
+        // case "upi":
+        // case "card":
+        // case "cards":
           row.gateway += rev;
           break;
         case "notpaid":
