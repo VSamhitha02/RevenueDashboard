@@ -1,5 +1,5 @@
 "use client";
-
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   useState,
   useEffect,
@@ -48,6 +48,13 @@ function formatShortDate(date: Date): string {
   });
 }
 
+function toSegmentedStr(date: Date): string {
+  const d = String(date.getDate()).padStart(2, "0");
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const y = date.getFullYear();
+  return `${d}/${m}/${y}`;
+}
+
 function parseMaskedDate(formattedStr: string): Date | null {
   if (formattedStr.length !== 10) return null;
   const [day, month, year] = formattedStr.split("/").map(Number);
@@ -71,6 +78,7 @@ type InputProps = {
   onDateParsed: (d: Date) => void;
   className?: string;
 };
+
 
 // Segmented DD / MM / YYYY input — the two "/" are real, fixed characters.
 // Only the digit boxes are editable; typing auto-advances; backspace on an
@@ -204,15 +212,34 @@ const SegmentedDateInput = forwardRef<HTMLDivElement, InputProps>(
 SegmentedDateInput.displayName = "SegmentedDateInput";
 
 export default function DateFilter({ selected, onSelect }: Props) {
+  const router = useRouter();
+const pathname = usePathname();
+const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
 
-  const [customDate, setCustomDate] = useState<Date | null>(null);
-  const [customStart, setCustomStart] = useState<Date | null>(null);
-  const [customEnd, setCustomEnd] = useState<Date | null>(null);
+  const urlCustomDate = searchParams.get("customDate");
+  const urlCustomStart = searchParams.get("customStart");
+  const urlCustomEnd = searchParams.get("customEnd");
 
-  const [dateStr, setDateStr] = useState("");
-  const [startStr, setStartStr] = useState("");
-  const [endStr, setEndStr] = useState("");
+  const [customDate, setCustomDate] = useState<Date | null>(
+    urlCustomDate ? new Date(urlCustomDate) : null,
+  );
+  const [customStart, setCustomStart] = useState<Date | null>(
+    urlCustomStart ? new Date(urlCustomStart) : null,
+  );
+  const [customEnd, setCustomEnd] = useState<Date | null>(
+    urlCustomEnd ? new Date(urlCustomEnd) : null,
+  );
+
+  const [dateStr, setDateStr] = useState(
+    urlCustomDate ? toSegmentedStr(new Date(urlCustomDate)) : "",
+  );
+  const [startStr, setStartStr] = useState(
+    urlCustomStart ? toSegmentedStr(new Date(urlCustomStart)) : "",
+  );
+  const [endStr, setEndStr] = useState(
+    urlCustomEnd ? toSegmentedStr(new Date(urlCustomEnd)) : "",
+  );
 
   const today = new Date();
 
@@ -278,6 +305,18 @@ export default function DateFilter({ selected, onSelect }: Props) {
     }
   }
 
+  function updateUrl(params: Record<string, string | undefined>) {
+    const next = new URLSearchParams(searchParams.toString());
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) {
+        next.set(key, value);
+      } else {
+        next.delete(key);
+      }
+    });
+    router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+  }
+
   function handleSelectOption(option: DateFilterOption) {
     onSelect(
       option,
@@ -285,9 +324,20 @@ export default function DateFilter({ selected, onSelect }: Props) {
       customStart?.toISOString(),
       customEnd?.toISOString(),
     );
+
+    // Only keep custom-date params in the URL when they're relevant to the
+    // option just picked, so switching to a preset clears stale custom dates.
+    updateUrl({
+      dateFilter: option,
+      customDate: option === "Custom Date" ? customDate?.toISOString() : undefined,
+      customStart:
+        option === "Custom Date Range" ? customStart?.toISOString() : undefined,
+      customEnd:
+        option === "Custom Date Range" ? customEnd?.toISOString() : undefined,
+    });
+
     setOpen(false);
   }
-
   return (
     <div className="bg-white rounded-lg shadow-md p-4 mb-6">
       <div className="flex items-center gap-4 flex-wrap">
@@ -334,11 +384,12 @@ export default function DateFilter({ selected, onSelect }: Props) {
               onChange={(date: Date | null) => {
                 setCustomDate(date);
                 if (date) {
-                  const d = String(date.getDate()).padStart(2, "0");
-                  const m = String(date.getMonth() + 1).padStart(2, "0");
-                  const y = date.getFullYear();
-                  setDateStr(`${d}/${m}/${y}`);
+                  setDateStr(toSegmentedStr(date));
                   onSelect("Custom Date", date.toISOString());
+                  updateUrl({
+                    dateFilter: "Custom Date",
+                    customDate: date.toISOString(),
+                  });
                 }
               }}
               maxDate={today}
@@ -350,6 +401,10 @@ export default function DateFilter({ selected, onSelect }: Props) {
                   onDateParsed={(d) => {
                     setCustomDate(d);
                     onSelect("Custom Date", d.toISOString());
+                    updateUrl({
+                      dateFilter: "Custom Date",
+                      customDate: d.toISOString(),
+                    });
                   }}
                 />
               }
@@ -363,16 +418,18 @@ export default function DateFilter({ selected, onSelect }: Props) {
                 onChange={(date: Date | null) => {
                   setCustomStart(date);
                   if (date) {
-                    const d = String(date.getDate()).padStart(2, "0");
-                    const m = String(date.getMonth() + 1).padStart(2, "0");
-                    const y = date.getFullYear();
-                    setStartStr(`${d}/${m}/${y}`);
+                    setStartStr(toSegmentedStr(date));
                     onSelect(
                       "Custom Date Range",
                       undefined,
                       date.toISOString(),
                       customEnd?.toISOString(),
                     );
+                    updateUrl({
+                      dateFilter: "Custom Date Range",
+                      customStart: date.toISOString(),
+                      customEnd: customEnd?.toISOString(),
+                    });
                   }
                 }}
                 maxDate={today}
@@ -389,6 +446,11 @@ export default function DateFilter({ selected, onSelect }: Props) {
                         d.toISOString(),
                         customEnd?.toISOString(),
                       );
+                      updateUrl({
+                        dateFilter: "Custom Date Range",
+                        customStart: d.toISOString(),
+                        customEnd: customEnd?.toISOString(),
+                      });
                     }}
                   />
                 }
@@ -401,16 +463,18 @@ export default function DateFilter({ selected, onSelect }: Props) {
                 onChange={(date: Date | null) => {
                   setCustomEnd(date);
                   if (date) {
-                    const d = String(date.getDate()).padStart(2, "0");
-                    const m = String(date.getMonth() + 1).padStart(2, "0");
-                    const y = date.getFullYear();
-                    setEndStr(`${d}/${m}/${y}`);
+                    setEndStr(toSegmentedStr(date));
                     onSelect(
                       "Custom Date Range",
                       undefined,
                       customStart?.toISOString(),
                       date.toISOString(),
                     );
+                    updateUrl({
+                      dateFilter: "Custom Date Range",
+                      customStart: customStart?.toISOString(),
+                      customEnd: date.toISOString(),
+                    });
                   }
                 }}
                 minDate={customStart || undefined}
@@ -428,6 +492,11 @@ export default function DateFilter({ selected, onSelect }: Props) {
                         customStart?.toISOString(),
                         d.toISOString(),
                       );
+                      updateUrl({
+                        dateFilter: "Custom Date Range",
+                        customStart: customStart?.toISOString(),
+                        customEnd: d.toISOString(),
+                      });
                     }}
                   />
                 }
