@@ -11,6 +11,7 @@ import OrderTypeRevenueAnalysis from "./OrderTypeRevenueAnalysis";
 import PaymentModeAnalysis from "./PaymentModeAnalysis";
 import ItemSegmentDashboard from "./ItemSegmentDashboard";
 import HourlyRevenueTrend from "./HourlyRevenueTrend";
+import HourlySegmentRevenue from "./HourlySegmentRevenue";
 
 import {
   getSummaryData,
@@ -18,6 +19,7 @@ import {
   getOrderTypeRevenueAnalysis,
   getPaymentModeAnalysis,
   getHourlyRevenueTrend,
+  getHourlySegmentRevenue,
 } from "@/utils/chartData";
 
 interface DashboardProps {
@@ -85,7 +87,7 @@ export default function Dashboard({ fseId }: DashboardProps) {
   const revenueTrend = getRevenueTrend(data);
   const paymentMode = getPaymentModeAnalysis(data);
   const orderTypeRevenue = getOrderTypeRevenueAnalysis(data);
-
+  const chartData = getHourlySegmentRevenue(data);
   return (
     <main className="min-h-screen bg-slate-100">
       <div className="max-w-7xl mx-auto px-8 py-8">
@@ -144,7 +146,9 @@ export default function Dashboard({ fseId }: DashboardProps) {
         </div>
 
         <div className="mt-8">
+          {/* <HourlySegmentRevenue chartData={chartData} /> */}
           <ItemSegmentDashboard data={data} />
+
         </div>
       </div>
     </main>
