@@ -193,11 +193,12 @@ console.log(topItems);
               <tr className="bg-orange-200">
                 <th className="px-3 py-2 text-left text-black">Segment</th>
                 <th className="px-3 py-2 text-left text-black">Item Name</th>
+                   <th className="px-3 py-2 text-right text-black">Quantity</th>
                 <th className="px-3 py-2 text-right text-black">Item Total</th>
                 <th className="px-3 py-2 text-right text-black">Discount</th>
                 <th className="px-3 py-2 text-right text-black">Taxes</th>
                 <th className="px-3 py-2 text-right text-black">Charges</th>
-                <th className="px-3 py-2 text-right text-black">Quantity</th>
+             
                 <th className="px-3 py-2 text-right text-black">Total</th>
               </tr>
             </thead>
@@ -224,6 +225,9 @@ console.log(topItems);
                   >
                     <td className="px-3 py-1.5 leading-tight text-black">{item.segment}</td>
                     <td className="px-3 py-1.5 leading-tight text-black">{item.itemName}</td>
+                      <td className="px-3 py-1.5 leading-tight text-right text-black">
+                      {quantity}
+                    </td>
                     <td className="px-3 py-1.5 leading-tight text-right text-black">
                       {formatCurrency(finalCost)}
                     </td>
@@ -236,9 +240,7 @@ console.log(topItems);
                     <td className="px-3 py-1.5 leading-tight text-right text-black">
                       {formatCurrency(charges)}
                     </td>
-                    <td className="px-3 py-1.5 leading-tight text-right text-black">
-                      {quantity}
-                    </td>
+                  
                     <td className="px-3 py-1.5 leading-tight text-right text-black font-semibold">
                       {formatCurrency(rowTotal)}
                     </td>
