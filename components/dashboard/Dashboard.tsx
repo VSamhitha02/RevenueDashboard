@@ -313,6 +313,7 @@ export default function Dashboard({ fseId }: DashboardProps) {
           <PaymentModeAnalysis
             pieData={paymentMode.pieData}
             barData={paymentMode.barData}
+            othersBreakdown={paymentMode.othersBreakdown}
           />
         </div>
 
