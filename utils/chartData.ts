@@ -602,3 +602,65 @@ export function getHourlyRevenueTrend(rawData: any, cutoffHour: number = 5) {
 
   return hours.map((h) => ({ ...h, average }));
 }
+
+// function formatHour(h: number): string {
+//   const hour = ((h % 24) + 24) % 24;
+//   return `${hour % 12 === 0 ? 12 : hour % 12} ${hour < 12 ? "AM" : "PM"}`;
+// }
+
+export function getHourlySegmentRevenue(rawData: any, cutoffHour: number = 4) {
+  const data = normalizeData(rawData);
+
+  const offline = data.offline_segment_revenue_hour_wise ?? [];
+  const online = data.online_segment_revenue_hour_wise ?? [];
+
+  const chartData = Array.from({ length: 24 }, (_, i) => {
+    const hour = (cutoffHour + i) % 24;
+
+    return {
+      hour,
+      hourLabel: formatHour(hour),
+      offline: 0,
+      online: 0,
+      total: 0,
+    };
+  });
+
+  const hourIndex = new Map(
+    chartData.map((item, index) => [item.hour, index])
+  );
+
+  // ---------------- Offline ----------------
+
+  offline.forEach((item: any) => {
+    const idx = hourIndex.get(Number(item.orderHour));
+
+    if (idx !== undefined) {
+      chartData[idx].offline += Number(item.finalCost ?? 0);
+    }
+  });
+
+  // ---------------- Online ----------------
+
+  online.forEach((item: any) => {
+    const idx = hourIndex.get(Number(item.orderHour));
+
+    if (idx !== undefined) {
+      chartData[idx].online += Number(
+        item.finalCost ??
+          item.totalRevenue ??
+          item.netAmount ??
+          item.payableAmount ??
+          0
+      );
+    }
+  });
+
+  // ---------------- Total ----------------
+
+  chartData.forEach((item) => {
+    item.total = item.offline + item.online;
+  });
+
+  return chartData;
+}

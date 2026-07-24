@@ -1,5 +1,5 @@
 "use client";
-
+import HourlySegmentRevenue from "./HourlySegmentRevenue";
 import { useState, useEffect } from "react";
 import {
   ResponsiveContainer,
@@ -14,7 +14,10 @@ import {
   LabelList
 } from "recharts";
 
-import { getItemSegmentDashboard } from "@/utils/chartData";
+import {
+  getItemSegmentDashboard,
+  getHourlySegmentRevenue,
+} from "@/utils/chartData";
 
 type Props = {
   data: any; // pass your RAW axios response here (the whole JSON object)
@@ -41,6 +44,7 @@ export default function ItemSegmentDashboard({ data }: Props) {
   const [selectedSegment, setSelectedSegment] = useState("All");
 
   const dashboard = getItemSegmentDashboard(data, selectedSegment);
+  const hourlySegmentData = getHourlySegmentRevenue(data);
 
   const { segments, cards, chartData, topItems, orderTypes, orderTypeLabels } = dashboard;
 
@@ -167,6 +171,9 @@ export default function ItemSegmentDashboard({ data }: Props) {
           </ComposedChart>
         </ResponsiveContainer>
       </div>
+
+      {/* ---------------- Hourly Revenue ---------------- */}
+      <HourlySegmentRevenue chartData={hourlySegmentData} />
 
       {/* ---------------- Top 10 Table ---------------- */}
       <div className="bg-indigo-100 rounded-xl shadow p-5">
