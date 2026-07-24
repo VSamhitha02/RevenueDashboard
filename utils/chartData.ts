@@ -25,6 +25,78 @@ function formatOrderTypeLabel(type: string): string {
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 
+// ---------------------------------------------------------------------------
+// payment_mode_wise entries are keyed off invoiceDate (same as offline
+// revenue rows), so this bucket is offline-only. It sums Not Paid / Credit /
+// No Charge so getSummaryData can drive the "Total Received" card, which —
+// per product — only ever reflects offline data since online settles
+// instantly and has no "not paid" state.
+//
+// Each bucket only counts rows explicitly tagged with that mode. Anything
+// unrecognized falls into `unknown` instead of silently inflating noCharge.
+// ---------------------------------------------------------------------------
+function getOfflinePaymentStatusTotals(rawData: any) {
+  const data = normalizeData(rawData);
+  const payment = Array.isArray(data.payment_mode_wise) ? data.payment_mode_wise : [];
+
+  let notPaid = 0;
+  let credit = 0;
+  let noCharge = 0;
+  let unknown = 0;
+  const unknownBreakdown: Record<string, number> = {};
+
+  payment.forEach((item: any) => {
+    if (!item) return;
+
+    const rawMode =
+      item.mode || item.paymentMode || item.payment_mode || item.paymentMethod || "";
+    const mode = String(rawMode).trim().toLowerCase().replace(/\s+/g, "");
+    const rev = Number(item.totalRevenue || item.revenue || 0);
+
+    switch (mode) {
+      case "cash":
+      case "gateway":
+      case "online":
+      case "card":
+      case "cards":
+      case "creditcard":
+      case "debitcard":
+        // Received modes — not part of the unpaid breakdown.
+        break;
+
+      case "notpaid":
+      case "due":
+        notPaid += rev;
+        break;
+
+      case "credit":
+      case "creditsale":
+      case "oncredit":
+        credit += rev;
+        break;
+
+      case "nocharge":
+      case "no_charge":
+      case "complimentary":
+      case "comp":
+      case "free":
+        noCharge += rev;
+        break;
+
+      default:
+        // Unrecognized mode — tracked separately so it doesn't inflate
+        // noCharge. Log via unknownBreakdown if you need to see what
+        // these are.
+        unknown += rev;
+        unknownBreakdown[rawMode || "Unknown"] =
+          (unknownBreakdown[rawMode || "Unknown"] || 0) + rev;
+        break;
+    }
+  });
+
+  return { notPaid, credit, noCharge, unknown, unknownBreakdown };
+}
+
 export function getSummaryData(rawData: any) {
   const data = normalizeData(rawData);
 
@@ -100,6 +172,16 @@ export function getSummaryData(rawData: any) {
 
   const totalDays = daySet.size;
 
+  // Offline-only payment status breakdown (Not Paid / Credit / No Charge),
+  // used to derive "Total Received" — online has no unpaid state.
+  const {
+    notPaid: offlineNotPaid,
+    credit: offlineCredit,
+    noCharge: offlineNoCharge,
+  } = getOfflinePaymentStatusTotals(rawData);
+
+  const offlineReceived = offlineRevenue - offlineNotPaid - offlineCredit - offlineNoCharge;
+
   return {
     totalRevenue,
     offlineRevenue,
@@ -109,6 +191,12 @@ export function getSummaryData(rawData: any) {
     totalMerchantDiscount: offlineMerchantDiscount + onlineMerchantDiscount,
     totalOrders,
     averageRevenue: totalDays === 0 ? 0 : totalRevenue / totalDays,
+
+    // Offline-only payment status breakdown, for the "Total Received" card
+    offlineNotPaid,
+    offlineCredit,
+    offlineNoCharge,
+    offlineReceived,
   };
 }
 
@@ -430,23 +518,6 @@ export function getRevenueLeakageAnalysis(rawData: any) {
 export function getItemSegmentAnalysis(rawData: any) {
   const data = normalizeData(rawData);
 
-  // const offlineItems = (data.offline_item_wise ?? []).map((item: any) => ({
-  //   itemName: item.name,
-  //   segment: item.segment,
-  //   orderType: item.orderType, // e.g. "pickUp", "dineIn", "takeAway" — whatever is actually in the data
-  //   date: item.invoiceDate,
-  //   quantity: item.totalQuantity ?? 0,
-  //   revenue: item.netAmount ?? item.itemTotal ?? 0,
-  // }));
-
-  // const onlineItems = (data.online_item_wise ?? []).map((item: any) => ({
-  //   itemName: item.name,
-  //   segment: item.segment,
-  //   orderType: item.orderType, // e.g. "swiggy", "zomato"
-  //   date: item.orderDate,
-  //   quantity: item.totalQuantity ?? 0,
-  //   revenue: item.netAmount ?? item.itemTotal ?? 0,
-  // }));
 const offlineItems = (data.offline_item_wise ?? []).map((item: any) => ({
   itemName: item.name,
   segment: item.segment,
@@ -456,8 +527,6 @@ const offlineItems = (data.offline_item_wise ?? []).map((item: any) => ({
   quantity: Number(item.totalQuantity ?? 0),
   revenue: Number(item.netAmount ?? item.itemTotal ?? 0),
 finalCost:  Number(item.finalCost ?? 0),
-  // Add these
-  //itemTotal: Number(item.itemTotal ?? 0),
   discountAmount: Number(item.discountAmount ?? 0),
   itemTax: Number(item.itemTax ?? item.totalTax ?? 0),
   charges: Number(item.charges ?? 0),
@@ -472,7 +541,6 @@ const onlineItems = (data.online_item_wise ?? []).map((item: any) => ({
   quantity: Number(item.totalQuantity ?? 0),
   revenue: Number(item.netAmount ?? item.itemTotal ?? 0),
 finalCost:  Number(item.finalCost ?? 0),
-  // Add these
   itemTotal: Number(item.itemTotal ?? 0),
   discountAmount: Number(item.discountAmount ?? 0),
   itemTax: Number(item.itemTax ?? item.totalTax ?? 0),
@@ -486,15 +554,10 @@ export function getItemSegmentDashboard(rawData: any, selectedSegment: string) {
 
   const items = [...(data.offlineItems ?? []), ...(data.onlineItems ?? [])];
 
-  // const segments = [
-  //   "All",
-  //   ...Array.from(new Set(items.map((i: any) => i.segment).filter(Boolean))),
-  // ];
 const segments = Array.from(
   new Set(items.map((i: any) => i.segment).filter(Boolean))
 );
-  // const filteredItems =
-  //   selectedSegment === "All" ? items : items.filter((i: any) => i.segment === selectedSegment);
+
 const filteredItems = items.filter(
   (i: any) => i.segment === selectedSegment
 );
@@ -545,33 +608,6 @@ const filteredItems = items.filter(
 
   // ---------------- Top Items ----------------
 
-  // const itemsMap: Record<string, any> = {};
-
-  // filteredItems.forEach((i: any) => {
-  //   if (!i.itemName) return;
-
-  //   if (!itemsMap[i.itemName]) {
-  //     itemsMap[i.itemName] = {
-  //       itemName: i.itemName,
-  //       segment: i.segment,
-  //       totalRevenue: 0,
-  //       orders: 0,
-  //     };
-  //   }
-
-  //   itemsMap[i.itemName].totalRevenue += i.revenue;
-  //   itemsMap[i.itemName].orders += i.quantity;
-  // });
-
-  // const topItems = Object.values(itemsMap)
-  //   .sort((a: any, b: any) => b.totalRevenue - a.totalRevenue)
-  //   .map((i: any) => ({
-  //     ...i,
-  //     avgRevenuePerDay: uniqueDays.size === 0 ? 0 : i.totalRevenue / uniqueDays.size,
-  //     avgOrderValue: i.orders === 0 ? 0 : i.totalRevenue / i.orders,
-  //   }));
-// ---------------- Top Items ----------------
-
 const itemsMap: Record<string, any> = {};
 
 filteredItems.forEach((i: any) => {
@@ -585,7 +621,6 @@ filteredItems.forEach((i: any) => {
       totalRevenue: 0,
       orders: 0,
 
-      // Add these fields
       finalCost:0,
       discountAmount: 0,
       itemTax: 0,
@@ -597,7 +632,6 @@ filteredItems.forEach((i: any) => {
   itemsMap[i.itemName].totalRevenue += Number(i.revenue ?? 0);
   itemsMap[i.itemName].orders += Number(i.quantity ?? 0);
 console.log("i.finalCost, i.name",i.finalCost,i.itemName)
-  // Aggregate these values
  itemsMap[i.itemName].finalCost += Number(i.finalCost ?? 0);
   itemsMap[i.itemName].discountAmount += Number(i.discountAmount ?? 0);
   itemsMap[i.itemName].itemTax += Number(i.itemTax ?? 0);
@@ -623,8 +657,6 @@ const topItems = Object.values(itemsMap)
       avgOrderValue,
     },
     chartData,
-    // Raw keys (e.g. "pickUp") + human-readable labels (e.g. "Pick Up"),
-    // in the same order, for rendering one <Bar> per real order type.
     orderTypes,
     orderTypeLabels: orderTypes.map(formatOrderTypeLabel),
     topItems,
@@ -642,8 +674,6 @@ export function getHourlyRevenueTrend(rawData: any, cutoffHour: number = 5) {
   const offline = data.offline_revenue_hour_wise ?? [];
   const online = data.online_revenue_hour_wise ?? [];
 
-  // 24 points: cutoffHour -> ... -> (cutoffHour - 1) wrapped around.
-  // e.g. cutoffHour = 5 -> [5 AM, 6 AM, ..., 11 PM, 12 AM, ..., 4 AM]
   const hours = Array.from({ length: 24 }, (_, i) => {
     const actualHour = (cutoffHour + i) % 24;
     return {
@@ -653,7 +683,6 @@ export function getHourlyRevenueTrend(rawData: any, cutoffHour: number = 5) {
     };
   });
 
-  // Map actual clock hour -> its position in the `hours` array above
   const hourToIndex = new Map(hours.map((h, idx) => [h.hour, idx]));
 
   offline.forEach((item: any) => {
@@ -680,11 +709,6 @@ export function getHourlyRevenueTrend(rawData: any, cutoffHour: number = 5) {
   return hours.map((h) => ({ ...h, average }));
 }
 
-// function formatHour(h: number): string {
-//   const hour = ((h % 24) + 24) % 24;
-//   return `${hour % 12 === 0 ? 12 : hour % 12} ${hour < 12 ? "AM" : "PM"}`;
-// }
-
 export function getHourlySegmentRevenue(rawData: any, cutoffHour: number = 4) {
   const data = normalizeData(rawData);
 
@@ -707,8 +731,6 @@ export function getHourlySegmentRevenue(rawData: any, cutoffHour: number = 4) {
     chartData.map((item, index) => [item.hour, index])
   );
 
-  // ---------------- Offline ----------------
-
   offline.forEach((item: any) => {
     const idx = hourIndex.get(Number(item.orderHour));
 
@@ -716,8 +738,6 @@ export function getHourlySegmentRevenue(rawData: any, cutoffHour: number = 4) {
       chartData[idx].offline += Number(item.finalCost ?? 0);
     }
   });
-
-  // ---------------- Online ----------------
 
   online.forEach((item: any) => {
     const idx = hourIndex.get(Number(item.orderHour));
@@ -732,8 +752,6 @@ export function getHourlySegmentRevenue(rawData: any, cutoffHour: number = 4) {
       );
     }
   });
-
-  // ---------------- Total ----------------
 
   chartData.forEach((item) => {
     item.total = item.offline + item.online;
