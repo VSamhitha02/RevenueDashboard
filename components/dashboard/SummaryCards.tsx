@@ -42,7 +42,7 @@ export default function SummaryCards({ summary }: SummaryCardsProps) {
       {/* Average Revenue - Soft Pink */}
       <div className="bg-[#FECDD3] rounded-2xl shadow-sm p-3.5 border border-rose-200/50 min-w-0 text-left pl-3">
         <h3 className="text-gray-700 text-xs sm:text-sm font-semibold tracking-wide truncate">
-          Avg Revenue
+         Avg Revenue Per Day
         </h3>
         <p
           className="text-lg xl:text-xl 2xl:text-2xl font-extrabold text-black mt-1.5 truncate tracking-tighter"

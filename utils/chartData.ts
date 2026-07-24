@@ -334,7 +334,7 @@ export function getPaymentModeAnalysis(rawData: any) {
       });
 
       if (!map.has(date)) {
-        map.set(date, { date, cash: 0, gateway: 0,upi: 0, card: 0, noCharge: 0, notPaid: 0 });
+        map.set(date, { date, cash: 0, gateway: 0, card: 0, noCharge: 0, notPaid: 0 });
       }
 
       const row = map.get(date);
@@ -351,10 +351,10 @@ switch (mode) {
     row.gateway += rev;
     break;
 
-  case "upi":
-  case "upipayment":
-    row.upi += rev;
-    break;
+  // case "upi":
+  // case "upipayment":
+  //   row.upi += rev;
+  //   break;
 
   case "card":
   case "cards":
@@ -384,7 +384,7 @@ default:
 barData.forEach((item: any) => {
   totals.gateway += item.gateway;
   totals.cash += item.cash;
-  totals.upi += item.upi;
+  // totals.upi += item.upi;
   totals.card += item.card;
   totals.noCharge += item.noCharge;
   totals.notPaid += item.notPaid;
@@ -393,7 +393,7 @@ barData.forEach((item: any) => {
 const pieData = [
   { name: "Cash", value: totals.cash },
   { name: "Gateway", value: totals.gateway },
-  { name: "UPI", value: totals.upi },
+  // { name: "UPI", value: totals.upi },
   { name: "Card", value: totals.card },
   { name: "Others", value: totals.noCharge },
   { name: "Not Paid", value: totals.notPaid },

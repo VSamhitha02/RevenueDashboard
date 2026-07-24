@@ -45,12 +45,12 @@ export default function ItemSegmentDashboard({ data }: Props) {
   const { segments, cards, chartData, topItems, orderTypes, orderTypeLabels } = dashboard;
 
   // auto-select "Food" segment if present, only once
-  useEffect(() => {
-    if (segments.includes("Food") && selectedSegment === "All") {
-      setSelectedSegment("Food");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [segments.length]);
+  // useEffect(() => {
+  //   if (segments.includes("Food") && selectedSegment === "All") {
+  //     setSelectedSegment("Food");
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [segments.length]);
 
   const totalOrdersSum = topItems.reduce((s: number, i: any) => s + i.orders, 0);
   const totalRevenueSum = topItems.reduce((s: number, i: any) => s + i.totalRevenue, 0);
@@ -92,7 +92,7 @@ export default function ItemSegmentDashboard({ data }: Props) {
         </div>
 
         <div className="rounded-xl bg-orange-200 text-black p-5 shadow-lg">
-          <p className="text-sm text-gray-700 font-semibold">No. of Orders</p>
+          <p className="text-sm text-gray-700 font-semibold">No. of Items</p>
           <h2 className="text-2xl font-bold mt-2">{cards.totalOrders}</h2>
         </div>
 

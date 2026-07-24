@@ -201,7 +201,7 @@ export default function RevenueTrend({ data, dateOption }: Props) {
             strokeDasharray="6 4"
             ifOverflow="extendDomain"
             label={{
-              value: `Avg ₹${formatNumber(avg)}`,
+              value: `Avg ${formatNumber(avg)}`,
               position: "insideTopRight",
               fill: "#ef4444",
               fontWeight: 700,
