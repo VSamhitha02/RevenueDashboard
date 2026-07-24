@@ -53,7 +53,7 @@ function renderStaggeredLabel(props: any) {
 
 export default function HourlyRevenueTrend({ data }: HourlyRevenueTrendProps) {
   return (
-    <div className="bg-yellow-50 rounded-xl shadow p-6">
+    <div className="bg-yellow-100 rounded-xl shadow p-6">
       <h2 className="text-xl font-semibold mb-4 text-black">
         Hourly Revenue Trend
       </h2>

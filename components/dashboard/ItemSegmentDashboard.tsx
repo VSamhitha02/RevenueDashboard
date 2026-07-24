@@ -131,13 +131,19 @@ export default function ItemSegmentDashboard({ data }: Props) {
             />
             <Legend wrapperStyle={{ color: "#000000" }} />
 
-            <ReferenceLine
-              y={cards.avgRevenuePerDay}
-              stroke="#3b82f6"
-              strokeDasharray="4 4"
-              label={{ value: "Average", position: "right", fill: "#3b82f6" }}
-            />
-
+<ReferenceLine
+  y={cards.avgRevenuePerDay}
+  stroke="#3b82f6"
+  strokeDasharray="4 4"
+  label={{
+    value: `Avg: ₹${Number(cards.avgRevenuePerDay).toLocaleString("en-IN")}`,
+    position: "insideTopRight",
+    fill: "#3b82f6",
+    fontSize: 14,        // 👈 bigger
+    fontWeight: 700,      // 👈 a bit bolder too, reads better at larger size
+    dy: -6,
+  }}
+/>
 {orderTypes.map((type: string, idx: number) => (
   <Bar
     key={type}

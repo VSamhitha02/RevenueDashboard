@@ -182,7 +182,7 @@ export default function OrderTypeRevenueAnalysis({
   }));
 
   return (
-    <div className="bg-purple-100 rounded-lg shadow-md p-5">
+    <div className="bg-pink-50 rounded-lg shadow-md p-5">
       <h2 className="text-xl font-semibold mb-4 text-black">
         Order Type Revenue Analysis
       </h2>
@@ -192,7 +192,7 @@ export default function OrderTypeRevenueAnalysis({
           data={chartData}
           barGap={4}
           barCategoryGap="20%"
-          margin={{ top: 24 }}
+          margin={{ top: 24, right:40 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
 
