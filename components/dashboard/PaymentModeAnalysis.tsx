@@ -24,7 +24,13 @@ const PIE_COLORS = {
   Others: "#8b5cf6",
   "Not Paid": "#ef4444",
 };
-
+const BAR_LEGEND = [
+  { name: "Gateway", color: "#16a34a" },
+  { name: "Cash", color: "#2563eb" },
+  { name: "Card", color: "#f59e0b" },
+  { name: "Others", color: "#8b5cf6" }, // same as noCharge bar
+  { name: "Not Paid", color: "#ef4444" }, // same as notPaid bar
+];
 type Props = {
   pieData: any[];
   barData: any[];
@@ -74,12 +80,12 @@ export default function PaymentModeAnalysis({
   );
 
   const paymentNames: Record<string, string> = {
-    cash: "Cash",
     gateway: "Gateway",
-    // upi: "UPI",
+    cash: "Cash",
     card: "Card",
-    noCharge: "Others",
+    // upi: "UPI",
     notPaid: "Not Paid",
+    noCharge: "Others",
   };
   const RADIAN = Math.PI / 180;
 
@@ -105,6 +111,7 @@ export default function PaymentModeAnalysis({
   };
   const average = barData.length === 0 ? 0 : totalRevenue / barData.length;
   const sortedLegend = [...pieData].sort((a, b) => b.value - a.value);
+  const sortedLegendBar = [...pieData].sort((a, b) => b.value - a.value);
   const showLabels = barData.length <= 4;
   return (
     <div className="bg-orange-100 rounded-lg shadow-md p-5">
@@ -295,37 +302,41 @@ export default function PaymentModeAnalysis({
                   marginTop: "10px",
                 }}
               >
-                {sortedLegend.map((item) => (
-                  <div
-                    key={item.name}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                    }}
-                  >
-                    <span
+                <Legend
+                  content={() => (
+                    <div
                       style={{
-                        width: 12,
-                        height: 12,
-                        borderRadius: 2,
-                        backgroundColor:
-                          PIE_COLORS[item.name as keyof typeof PIE_COLORS] ||
-                          "#040404",
-                        display: "inline-block",
-                      }}
-                    />
-                    <span
-                      style={{
-                        color:
-                          PIE_COLORS[item.name as keyof typeof PIE_COLORS] ||
-                          "#040404",
+                        display: "flex",
+                        justifyContent: "center",
+                        flexWrap: "wrap",
+                        gap: "16px",
+                        marginTop: "10px",
                       }}
                     >
-                      {item.name}
-                    </span>
-                  </div>
-                ))}
+                      {BAR_LEGEND.map((item) => (
+                        <div
+                          key={item.name}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: 12,
+                              height: 12,
+                              borderRadius: 2,
+                              backgroundColor: item.color,
+                              display: "inline-block",
+                            }}
+                          />
+                          <span style={{ color: item.color }}>{item.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                />
               </div>
             )}
           />
@@ -360,7 +371,9 @@ export default function PaymentModeAnalysis({
                 fontSize={16}
                 fontWeight="700"
                 offset={8}
-              formatter={(value: any) => formatAmount(value, barData.length === 4)}
+                formatter={(value: any) =>
+                  formatAmount(value, barData.length === 4)
+                }
               />
             )}
           </Bar>
@@ -383,7 +396,9 @@ export default function PaymentModeAnalysis({
                 fontSize={16}
                 fontWeight="700"
                 offset={8}
-             formatter={(value: any) => formatAmount(value, barData.length === 4)}
+                formatter={(value: any) =>
+                  formatAmount(value, barData.length === 4)
+                }
               />
             )}
           </Bar>
@@ -406,12 +421,14 @@ export default function PaymentModeAnalysis({
                 fontSize={16}
                 fontWeight="700"
                 offset={8}
-              formatter={(value: any) => formatAmount(value, barData.length === 4)}
+                formatter={(value: any) =>
+                  formatAmount(value, barData.length === 4)
+                }
               />
             )}
           </Bar>
 
-          <Bar dataKey="noCharge" fill="#ef4444" name="Others">
+          <Bar dataKey="noCharge" fill="#8b5cf6" name="Others">
             {/* <LabelList
               fill="#111827"
               dataKey="noCharge"
@@ -425,11 +442,13 @@ export default function PaymentModeAnalysis({
               <LabelList
                 dataKey="noCharge"
                 position="top"
-                fill="#111827"
+                fill="#8b5cf6"
                 fontSize={16}
                 fontWeight="700"
                 offset={8}
-             formatter={(value: any) => formatAmount(value, barData.length === 4)}
+                formatter={(value: any) =>
+                  formatAmount(value, barData.length === 4)
+                }
               />
             )}
           </Bar>
@@ -446,7 +465,7 @@ export default function PaymentModeAnalysis({
             />
           </Bar> */}
 
-          <Bar dataKey="notPaid" fill="#f97316" name="Not Paid">
+          <Bar dataKey="notPaid" fill="#ef4444" name="Not Paid">
             {/* <LabelList
               fill="#111827"
               dataKey="notPaid"
@@ -460,11 +479,13 @@ export default function PaymentModeAnalysis({
               <LabelList
                 dataKey="notPaid"
                 position="top"
-                fill="#111827"
+                fill="#ef4444"
                 fontSize={16}
                 fontWeight="700"
                 offset={8}
-                formatter={(value: any) => formatAmount(value, barData.length === 4)}
+                formatter={(value: any) =>
+                  formatAmount(value, barData.length === 4)
+                }
               />
             )}
           </Bar>
