@@ -1,6 +1,6 @@
 "use client";
 import HourlySegmentRevenue from "./HourlySegmentRevenue";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -20,50 +20,61 @@ import {
 } from "@/utils/chartData";
 
 type Props = {
-  data: any; // pass your RAW axios response here (the whole JSON object)
+  data: any; // RAW response JSON object
 };
 
 const formatCurrency = (value: number) =>
-  `₹${Number(value).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+  `₹${Number(value || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
 const formatChartValue = (value: number) => {
   if (value >= 10000000) {
     return `₹${Math.round(value / 10000000)}Cr`;
   }
-
   if (value >= 100000) {
     return `₹${Math.round(value / 100000)}L`;
   }
-
   return `₹${Number(value).toLocaleString("en-IN")}`;
 };
 
-// Palette cycles if there are more order types than colors.
 const BAR_COLORS = ["#22c55e", "#f97316", "#3b82f6", "#a855f7", "#ef4444", "#14b8a6"];
 
 export default function ItemSegmentDashboard({ data }: Props) {
-  const [selectedSegment, setSelectedSegment] = useState("All");
+  const [selectedSegment, setSelectedSegment] = useState("Food");
 
   const dashboard = getItemSegmentDashboard(data, selectedSegment);
   const hourlySegmentData = getHourlySegmentRevenue(data);
 
   const { segments, cards, chartData, topItems, orderTypes, orderTypeLabels } = dashboard;
+console.log(topItems);
+  // Calculate overall totals across all table rows
+ const tableTotals = topItems.reduce(
+  (acc: any, item: any) => {
+    const finalCost = Number(item.finalCost ?? 0);
+    const discount = Number(item.discountAmount ?? 0);
+    const taxes = Number(item.itemTax ?? 0);
+    const charges = Number(item.charges ?? 0);
+    const quantity = Number(item.quantity ?? 0);
 
-  // auto-select "Food" segment if present, only once
-  // useEffect(() => {
-  //   if (segments.includes("Food") && selectedSegment === "All") {
-  //     setSelectedSegment("Food");
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [segments.length]);
+    const rowTotal = finalCost - discount + taxes + charges;
 
-  const totalOrdersSum = topItems.reduce((s: number, i: any) => s + i.orders, 0);
-  const totalRevenueSum = topItems.reduce((s: number, i: any) => s + i.totalRevenue, 0);
-  const totalAvgRevenuePerDaySum = topItems.reduce(
-    (s: number, i: any) => s + i.avgRevenuePerDay,
-    0
-  );
-  const totalAOV = totalOrdersSum === 0 ? 0 : totalRevenueSum / totalOrdersSum;
-
+    return {
+      finalCost: acc.finalCost + finalCost,
+      discount: acc.discount + discount,
+      taxes: acc.taxes + taxes,
+      charges: acc.charges + charges,
+      quantity: acc.quantity + quantity,
+      grandTotal: acc.grandTotal + rowTotal,
+    };
+  },
+  {
+    finalCost: 0,
+    discount: 0,
+    taxes: 0,
+    charges: 0,
+    quantity: 0,
+    grandTotal: 0,
+  }
+);
   return (
     <div className="space-y-8">
       {/* ---------------- Filter ---------------- */}
@@ -114,14 +125,9 @@ export default function ItemSegmentDashboard({ data }: Props) {
 
         <ResponsiveContainer width="100%" height={420}>
           <ComposedChart
-  data={chartData}
-  margin={{
-    top: 40,
-    right: 20,
-    left: 20,
-    bottom: 20,
-  }}
->
+            data={chartData}
+            margin={{ top: 40, right: 20, left: 20, bottom: 20 }}
+          >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" tick={{ fill: "#000000" }} />
             <YAxis
@@ -135,39 +141,39 @@ export default function ItemSegmentDashboard({ data }: Props) {
             />
             <Legend wrapperStyle={{ color: "#000000" }} />
 
-<ReferenceLine
-  y={cards.avgRevenuePerDay}
-  stroke="#3b82f6"
-  strokeDasharray="4 4"
-  label={{
-    value: `Avg: ₹${Number(cards.avgRevenuePerDay).toLocaleString("en-IN")}`,
-    position: "insideTopRight",
-    fill: "#3b82f6",
-    fontSize: 14,        // 👈 bigger
-    fontWeight: 700,      // 👈 a bit bolder too, reads better at larger size
-    dy: -6,
-  }}
-/>
-{orderTypes.map((type: string, idx: number) => (
-  <Bar
-    key={type}
-    dataKey={type}
-    name={orderTypeLabels[idx]}
-    fill={BAR_COLORS[idx % BAR_COLORS.length]}
-    radius={[4, 4, 0, 0]}
-  >
-    <LabelList
-      dataKey={type}
-      position="top"
-      fill="#000000"
-      fontSize={13}
-      fontWeight="700"
-      formatter={(value: any) => 
-        value > 0 ? formatChartValue(Number(value)) : ""
-      }
-    />
-  </Bar>
-))}
+            <ReferenceLine
+              y={cards.avgRevenuePerDay}
+              stroke="#3b82f6"
+              strokeDasharray="4 4"
+              label={{
+                value: `Avg: ₹${Number(cards.avgRevenuePerDay).toLocaleString("en-IN")}`,
+                position: "insideTopRight",
+                fill: "#3b82f6",
+                fontSize: 14,
+                fontWeight: 700,
+                dy: -6,
+              }}
+            />
+            {orderTypes.map((type: string, idx: number) => (
+              <Bar
+                key={type}
+                dataKey={type}
+                name={orderTypeLabels[idx]}
+                fill={BAR_COLORS[idx % BAR_COLORS.length]}
+                radius={[4, 4, 0, 0]}
+              >
+                <LabelList
+                  dataKey={type}
+                  position="top"
+                  fill="#000000"
+                  fontSize={13}
+                  fontWeight="700"
+                  formatter={(value: any) =>
+                    value > 0 ? formatChartValue(Number(value)) : ""
+                  }
+                />
+              </Bar>
+            ))}
           </ComposedChart>
         </ResponsiveContainer>
       </div>
@@ -175,7 +181,7 @@ export default function ItemSegmentDashboard({ data }: Props) {
       {/* ---------------- Hourly Revenue ---------------- */}
       <HourlySegmentRevenue chartData={hourlySegmentData} />
 
-      {/* ---------------- Top 10 Table ---------------- */}
+      {/* ---------------- Table ---------------- */}
       <div className="bg-indigo-100 rounded-xl shadow p-5">
         <h3 className="text-xl text-black font-semibold mb-4 text-center">
           Item Wise Revenue Details
@@ -187,55 +193,81 @@ export default function ItemSegmentDashboard({ data }: Props) {
               <tr className="bg-orange-200">
                 <th className="px-3 py-2 text-left text-black">Segment</th>
                 <th className="px-3 py-2 text-left text-black">Item Name</th>
-                <th className="px-3 py-2 text-right text-black">Total Revenue</th>
-                <th className="px-3 py-2 text-right text-black">Avg. Item Revenue/Day</th>
-                <th className="px-3 py-2 text-right text-black">No. of Orders</th>
-                <th className="px-3 py-2 text-right text-black">AOV</th>
+                <th className="px-3 py-2 text-right text-black">Item Total</th>
+                <th className="px-3 py-2 text-right text-black">Discount</th>
+                <th className="px-3 py-2 text-right text-black">Taxes</th>
+                <th className="px-3 py-2 text-right text-black">Charges</th>
+                <th className="px-3 py-2 text-right text-black">Quantity</th>
+                <th className="px-3 py-2 text-right text-black">Total</th>
               </tr>
             </thead>
 
             <tbody>
-              {topItems.map((item: any, index: number) => (
-                <tr
-                  key={index}
-                  className={
-                    index % 2 === 0
-                      ? "bg-blue-100 border-b border-blue-200"
-                      : "bg-blue-300 border-b border-blue-200"
-                  }
-                >
-                  <td className="px-3 py-1.5 leading-tight text-black">{item.segment}</td>
-                  <td className="px-3 py-1.5 leading-tight text-black">{item.itemName}</td>
-                  <td className="px-3 py-1.5 leading-tight text-right text-black">
-                    {formatCurrency(item.totalRevenue)}
-                  </td>
-                  <td className="px-3 py-1.5 leading-tight text-black text-right">
-                    {formatCurrency(item.avgRevenuePerDay)}
-                  </td>
-                  <td className="px-3 py-1.5 leading-tight text-black text-right">
-                    {item.orders}
-                  </td>
-                  <td className="px-3 py-1.5 leading-tight text-black text-right">
-                    {formatCurrency(item.avgOrderValue)}
-                  </td>
-                </tr>
-              ))}
+              {topItems.map((item: any, index: number) => {
+                const finalCost = Number(item.finalCost );
+                const discount = Number(item.discountAmount );
+                const taxes = Number(item.itemTax   );
+                const charges = Number(item.charges );
+                const quantity = Number(item.quantity );
 
+                // Formula: Total = Item Total - Discount + Taxes + Charges
+                const rowTotal = finalCost - discount + taxes + charges;
+
+                return (
+                  <tr
+                    key={index}
+                    className={
+                      index % 2 === 0
+                        ? "bg-blue-100 border-b border-blue-200"
+                        : "bg-blue-300 border-b border-blue-200"
+                    }
+                  >
+                    <td className="px-3 py-1.5 leading-tight text-black">{item.segment}</td>
+                    <td className="px-3 py-1.5 leading-tight text-black">{item.itemName}</td>
+                    <td className="px-3 py-1.5 leading-tight text-right text-black">
+                      {formatCurrency(finalCost)}
+                    </td>
+                    <td className="px-3 py-1.5 leading-tight text-right text-black">
+                      {formatCurrency(discount)}
+                    </td>
+                    <td className="px-3 py-1.5 leading-tight text-right text-black">
+                      {formatCurrency(taxes)}
+                    </td>
+                    <td className="px-3 py-1.5 leading-tight text-right text-black">
+                      {formatCurrency(charges)}
+                    </td>
+                    <td className="px-3 py-1.5 leading-tight text-right text-black">
+                      {quantity}
+                    </td>
+                    <td className="px-3 py-1.5 leading-tight text-right text-black font-semibold">
+                      {formatCurrency(rowTotal)}
+                    </td>
+                  </tr>
+                );
+              })}
+
+              {/* Total Footer Row */}
               <tr className="font-bold text-black bg-yellow-200">
-                <td className="px-3 py-1.5 text-black leading-tight" colSpan={2}>
+                <td className="px-3 py-2 text-black leading-tight" colSpan={2}>
                   Total
                 </td>
-                <td className="px-3 py-1.5 text-black leading-tight text-right">
-                  {formatCurrency(totalRevenueSum)}
+                <td className="px-3 py-2 text-right text-black leading-tight">
+                  {formatCurrency(tableTotals.finalCost)}
                 </td>
-                <td className="px-3 py-1.5 leading-tight text-black text-right">
-                  {formatCurrency(totalAvgRevenuePerDaySum)}
+                <td className="px-3 py-2 text-right text-black leading-tight">
+                  {formatCurrency(tableTotals.discount)}
                 </td>
-                <td className="px-3 py-1.5 leading-tight text-black text-right">
-                  {totalOrdersSum}
+                <td className="px-3 py-2 text-right text-black leading-tight">
+                  {formatCurrency(tableTotals.taxes)}
                 </td>
-                <td className="px-3 py-1.5 leading-tight text-black text-right">
-                  {formatCurrency(totalAOV)}
+                <td className="px-3 py-2 text-right text-black leading-tight">
+                  {formatCurrency(tableTotals.charges)}
+                </td>
+                <td className="px-3 py-2 text-right text-black leading-tight">
+                  {tableTotals.quantity}
+                </td>
+                <td className="px-3 py-2 text-right text-black leading-tight">
+                  {formatCurrency(tableTotals.grandTotal)}
                 </td>
               </tr>
             </tbody>

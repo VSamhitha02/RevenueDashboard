@@ -430,24 +430,54 @@ export function getRevenueLeakageAnalysis(rawData: any) {
 export function getItemSegmentAnalysis(rawData: any) {
   const data = normalizeData(rawData);
 
-  const offlineItems = (data.offline_item_wise ?? []).map((item: any) => ({
-    itemName: item.name,
-    segment: item.segment,
-    orderType: item.orderType, // e.g. "pickUp", "dineIn", "takeAway" — whatever is actually in the data
-    date: item.invoiceDate,
-    quantity: item.totalQuantity ?? 0,
-    revenue: item.netAmount ?? item.itemTotal ?? 0,
-  }));
+  // const offlineItems = (data.offline_item_wise ?? []).map((item: any) => ({
+  //   itemName: item.name,
+  //   segment: item.segment,
+  //   orderType: item.orderType, // e.g. "pickUp", "dineIn", "takeAway" — whatever is actually in the data
+  //   date: item.invoiceDate,
+  //   quantity: item.totalQuantity ?? 0,
+  //   revenue: item.netAmount ?? item.itemTotal ?? 0,
+  // }));
 
-  const onlineItems = (data.online_item_wise ?? []).map((item: any) => ({
-    itemName: item.name,
-    segment: item.segment,
-    orderType: item.orderType, // e.g. "swiggy", "zomato"
-    date: item.orderDate,
-    quantity: item.totalQuantity ?? 0,
-    revenue: item.netAmount ?? item.itemTotal ?? 0,
-  }));
+  // const onlineItems = (data.online_item_wise ?? []).map((item: any) => ({
+  //   itemName: item.name,
+  //   segment: item.segment,
+  //   orderType: item.orderType, // e.g. "swiggy", "zomato"
+  //   date: item.orderDate,
+  //   quantity: item.totalQuantity ?? 0,
+  //   revenue: item.netAmount ?? item.itemTotal ?? 0,
+  // }));
+const offlineItems = (data.offline_item_wise ?? []).map((item: any) => ({
+  itemName: item.name,
+  segment: item.segment,
+  orderType: item.orderType,
+  date: item.invoiceDate,
 
+  quantity: Number(item.totalQuantity ?? 0),
+  revenue: Number(item.netAmount ?? item.itemTotal ?? 0),
+finalCost:  Number(item.finalCost ?? 0),
+  // Add these
+  //itemTotal: Number(item.itemTotal ?? 0),
+  discountAmount: Number(item.discountAmount ?? 0),
+  itemTax: Number(item.itemTax ?? item.totalTax ?? 0),
+  charges: Number(item.charges ?? 0),
+}));
+
+const onlineItems = (data.online_item_wise ?? []).map((item: any) => ({
+  itemName: item.name,
+  segment: item.segment,
+  orderType: item.orderType,
+  date: item.orderDate,
+
+  quantity: Number(item.totalQuantity ?? 0),
+  revenue: Number(item.netAmount ?? item.itemTotal ?? 0),
+finalCost:  Number(item.finalCost ?? 0),
+  // Add these
+  itemTotal: Number(item.itemTotal ?? 0),
+  discountAmount: Number(item.discountAmount ?? 0),
+  itemTax: Number(item.itemTax ?? item.totalTax ?? 0),
+  charges: Number(item.charges ?? 0),
+}));
   return { offlineItems, onlineItems };
 }
 
@@ -456,14 +486,18 @@ export function getItemSegmentDashboard(rawData: any, selectedSegment: string) {
 
   const items = [...(data.offlineItems ?? []), ...(data.onlineItems ?? [])];
 
-  const segments = [
-    "All",
-    ...Array.from(new Set(items.map((i: any) => i.segment).filter(Boolean))),
-  ];
-
-  const filteredItems =
-    selectedSegment === "All" ? items : items.filter((i: any) => i.segment === selectedSegment);
-
+  // const segments = [
+  //   "All",
+  //   ...Array.from(new Set(items.map((i: any) => i.segment).filter(Boolean))),
+  // ];
+const segments = Array.from(
+  new Set(items.map((i: any) => i.segment).filter(Boolean))
+);
+  // const filteredItems =
+  //   selectedSegment === "All" ? items : items.filter((i: any) => i.segment === selectedSegment);
+const filteredItems = items.filter(
+  (i: any) => i.segment === selectedSegment
+);
   // ---------------- Cards ----------------
 
   const totalRevenue = filteredItems.reduce((s: number, i: any) => s + i.revenue, 0);
@@ -511,32 +545,75 @@ export function getItemSegmentDashboard(rawData: any, selectedSegment: string) {
 
   // ---------------- Top Items ----------------
 
-  const itemsMap: Record<string, any> = {};
+  // const itemsMap: Record<string, any> = {};
 
-  filteredItems.forEach((i: any) => {
-    if (!i.itemName) return;
+  // filteredItems.forEach((i: any) => {
+  //   if (!i.itemName) return;
 
-    if (!itemsMap[i.itemName]) {
-      itemsMap[i.itemName] = {
-        itemName: i.itemName,
-        segment: i.segment,
-        totalRevenue: 0,
-        orders: 0,
-      };
-    }
+  //   if (!itemsMap[i.itemName]) {
+  //     itemsMap[i.itemName] = {
+  //       itemName: i.itemName,
+  //       segment: i.segment,
+  //       totalRevenue: 0,
+  //       orders: 0,
+  //     };
+  //   }
 
-    itemsMap[i.itemName].totalRevenue += i.revenue;
-    itemsMap[i.itemName].orders += i.quantity;
-  });
+  //   itemsMap[i.itemName].totalRevenue += i.revenue;
+  //   itemsMap[i.itemName].orders += i.quantity;
+  // });
 
-  const topItems = Object.values(itemsMap)
-    .sort((a: any, b: any) => b.totalRevenue - a.totalRevenue)
-    .map((i: any) => ({
-      ...i,
-      avgRevenuePerDay: uniqueDays.size === 0 ? 0 : i.totalRevenue / uniqueDays.size,
-      avgOrderValue: i.orders === 0 ? 0 : i.totalRevenue / i.orders,
-    }));
+  // const topItems = Object.values(itemsMap)
+  //   .sort((a: any, b: any) => b.totalRevenue - a.totalRevenue)
+  //   .map((i: any) => ({
+  //     ...i,
+  //     avgRevenuePerDay: uniqueDays.size === 0 ? 0 : i.totalRevenue / uniqueDays.size,
+  //     avgOrderValue: i.orders === 0 ? 0 : i.totalRevenue / i.orders,
+  //   }));
+// ---------------- Top Items ----------------
 
+const itemsMap: Record<string, any> = {};
+
+filteredItems.forEach((i: any) => {
+  if (!i.itemName) return;
+
+  if (!itemsMap[i.itemName]) {
+    itemsMap[i.itemName] = {
+      itemName: i.itemName,
+      segment: i.segment,
+
+      totalRevenue: 0,
+      orders: 0,
+
+      // Add these fields
+      finalCost:0,
+      discountAmount: 0,
+      itemTax: 0,
+      charges: 0,
+      quantity: 0,
+    };
+  }
+
+  itemsMap[i.itemName].totalRevenue += Number(i.revenue ?? 0);
+  itemsMap[i.itemName].orders += Number(i.quantity ?? 0);
+console.log("i.finalCost, i.name",i.finalCost,i.itemName)
+  // Aggregate these values
+ itemsMap[i.itemName].finalCost += Number(i.finalCost ?? 0);
+  itemsMap[i.itemName].discountAmount += Number(i.discountAmount ?? 0);
+  itemsMap[i.itemName].itemTax += Number(i.itemTax ?? 0);
+  itemsMap[i.itemName].charges += Number(i.charges ?? 0);
+  itemsMap[i.itemName].quantity += Number(i.quantity ?? 0);
+});
+
+const topItems = Object.values(itemsMap)
+  .sort((a: any, b: any) => b.totalRevenue - a.totalRevenue)
+  .map((i: any) => ({
+    ...i,
+    avgRevenuePerDay:
+      uniqueDays.size === 0 ? 0 : i.totalRevenue / uniqueDays.size,
+    avgOrderValue:
+      i.orders === 0 ? 0 : i.totalRevenue / i.orders,
+  }));
   return {
     segments,
     cards: {
