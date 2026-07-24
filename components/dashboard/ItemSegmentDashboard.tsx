@@ -1,6 +1,6 @@
 "use client";
 import HourlySegmentRevenue from "./HourlySegmentRevenue";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -39,12 +39,29 @@ const formatChartValue = (value: number) => {
 const BAR_COLORS = ["#22c55e", "#f97316", "#3b82f6", "#a855f7", "#ef4444", "#14b8a6"];
 
 export default function ItemSegmentDashboard({ data }: Props) {
-  const [selectedSegment, setSelectedSegment] = useState("Food");
+  const [selectedSegment, setSelectedSegment] = useState("");
 
-  const dashboard = getItemSegmentDashboard(data, selectedSegment);
+const dashboard = getItemSegmentDashboard(data, selectedSegment);
+
+const {
+  segments,
+  cards,
+  chartData,
+  topItems,
+  orderTypes,
+  orderTypeLabels,
+} = dashboard;
+
+useEffect(() => {
+  if (!selectedSegment && segments.length > 0) {
+    setSelectedSegment(segments[0]);
+  }
+}, [segments, selectedSegment]);
+
+ 
   const hourlySegmentData = getHourlySegmentRevenue(data);
 
-  const { segments, cards, chartData, topItems, orderTypes, orderTypeLabels } = dashboard;
+ 
 console.log(topItems);
   // Calculate overall totals across all table rows
  const tableTotals = topItems.reduce(
