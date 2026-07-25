@@ -33,13 +33,14 @@ export default function HourlySegmentRevenue({
   const offlineTotal = chartData.reduce((sum, item) => sum + item.offline, 0);
   const onlineTotal = chartData.reduce((sum, item) => sum + item.online, 0);
   const totalRevenue = chartData.reduce((sum, item) => sum + item.total, 0);
-const startHour = chartData[0]?.hourLabel ?? "";
-const endHour = chartData[chartData.length - 1]?.hourLabel ?? "";
+  const startHour = chartData[0]?.hourLabel ?? "";
+  const endHour = chartData[chartData.length - 1]?.hourLabel ?? "";
+
   return (
     <div className="bg-yellow-100 rounded-xl shadow p-6">
-<h2 className="text-xl font-semibold mb-4 text-black">
-  Hourly Segment Revenue ({startHour} - {endHour})
-</h2>
+      <h2 className="text-xl font-semibold mb-4 text-black">
+        Hourly Segment Revenue ({startHour} - {endHour})
+      </h2>
 
       {/* Totals */}
       <div className="flex justify-center gap-10 mb-5 text-sm font-medium text-black">

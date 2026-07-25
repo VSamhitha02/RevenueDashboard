@@ -59,7 +59,7 @@ useEffect(() => {
 }, [segments, selectedSegment]);
 
  
-  const hourlySegmentData = getHourlySegmentRevenue(data);
+  const hourlySegmentData = getHourlySegmentRevenue(data, selectedSegment);
 
  
 console.log(topItems);
