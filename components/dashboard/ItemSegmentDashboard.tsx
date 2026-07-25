@@ -1,6 +1,6 @@
 "use client";
 import HourlySegmentRevenue from "./HourlySegmentRevenue";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -39,12 +39,29 @@ const formatChartValue = (value: number) => {
 const BAR_COLORS = ["#22c55e", "#f97316", "#3b82f6", "#a855f7", "#ef4444", "#14b8a6"];
 
 export default function ItemSegmentDashboard({ data }: Props) {
-  const [selectedSegment, setSelectedSegment] = useState("Food");
+  const [selectedSegment, setSelectedSegment] = useState("");
 
-  const dashboard = getItemSegmentDashboard(data, selectedSegment);
+const dashboard = getItemSegmentDashboard(data, selectedSegment);
+
+const {
+  segments,
+  cards,
+  chartData,
+  topItems,
+  orderTypes,
+  orderTypeLabels,
+} = dashboard;
+
+useEffect(() => {
+  if (!selectedSegment && segments.length > 0) {
+    setSelectedSegment(segments[0]);
+  }
+}, [segments, selectedSegment]);
+
+ 
   const hourlySegmentData = getHourlySegmentRevenue(data);
 
-  const { segments, cards, chartData, topItems, orderTypes, orderTypeLabels } = dashboard;
+ 
 console.log(topItems);
   // Calculate overall totals across all table rows
  const tableTotals = topItems.reduce(
@@ -193,11 +210,12 @@ console.log(topItems);
               <tr className="bg-orange-200">
                 <th className="px-3 py-2 text-left text-black">Segment</th>
                 <th className="px-3 py-2 text-left text-black">Item Name</th>
+                   <th className="px-3 py-2 text-right text-black">Quantity</th>
                 <th className="px-3 py-2 text-right text-black">Item Total</th>
                 <th className="px-3 py-2 text-right text-black">Discount</th>
                 <th className="px-3 py-2 text-right text-black">Taxes</th>
                 <th className="px-3 py-2 text-right text-black">Charges</th>
-                <th className="px-3 py-2 text-right text-black">Quantity</th>
+             
                 <th className="px-3 py-2 text-right text-black">Total</th>
               </tr>
             </thead>
@@ -224,6 +242,9 @@ console.log(topItems);
                   >
                     <td className="px-3 py-1.5 leading-tight text-black">{item.segment}</td>
                     <td className="px-3 py-1.5 leading-tight text-black">{item.itemName}</td>
+                      <td className="px-3 py-1.5 leading-tight text-right text-black">
+                      {quantity}
+                    </td>
                     <td className="px-3 py-1.5 leading-tight text-right text-black">
                       {formatCurrency(finalCost)}
                     </td>
@@ -236,9 +257,7 @@ console.log(topItems);
                     <td className="px-3 py-1.5 leading-tight text-right text-black">
                       {formatCurrency(charges)}
                     </td>
-                    <td className="px-3 py-1.5 leading-tight text-right text-black">
-                      {quantity}
-                    </td>
+                  
                     <td className="px-3 py-1.5 leading-tight text-right text-black font-semibold">
                       {formatCurrency(rowTotal)}
                     </td>

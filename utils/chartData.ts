@@ -557,10 +557,12 @@ export function getItemSegmentDashboard(rawData: any, selectedSegment: string) {
 const segments = Array.from(
   new Set(items.map((i: any) => i.segment).filter(Boolean))
 );
-
-const filteredItems = items.filter(
-  (i: any) => i.segment === selectedSegment
-);
+  // const filteredItems =
+  //   selectedSegment === "All" ? items : items.filter((i: any) => i.segment === selectedSegment);
+const filteredItems =
+  !selectedSegment
+    ? items
+    : items.filter((i: any) => i.segment === selectedSegment);
   // ---------------- Cards ----------------
 
   const totalRevenue = filteredItems.reduce((s: number, i: any) => s + i.revenue, 0);
