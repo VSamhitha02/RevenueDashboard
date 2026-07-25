@@ -20,10 +20,15 @@ type Props = {
 };
 
 const formatNumber = (value: number) => {
-  if (value >= 10000000) return `${(value / 10000000).toFixed(1)}Cr`;
-  if (value >= 100000) return `${(value / 100000).toFixed(1)}L`;
-  if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
-  return value.toString();
+  if (value >= 10000000) {
+    return `₹${Math.round(value / 10000000)}Cr`;
+  }
+
+  if (value >= 100000) {
+    return `₹${Math.round(value / 100000)}L`;
+  }
+
+  return `₹${Number(value).toLocaleString("en-IN")}`;
 };
 
 export default function RevenueTrend({ data, dateOption }: Props) {
@@ -196,7 +201,7 @@ export default function RevenueTrend({ data, dateOption }: Props) {
             strokeDasharray="6 4"
             ifOverflow="extendDomain"
             label={{
-              value: `Avg ₹${formatNumber(avg)}`,
+              value: `Avg ${formatNumber(avg)}`,
               position: "insideTopRight",
               fill: "#ef4444",
               fontWeight: 700,
