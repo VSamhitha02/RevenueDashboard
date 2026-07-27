@@ -136,7 +136,6 @@ type SummaryCardsProps = {
     totalOrders: number;
     averageRevenue: number;
 
-    // Offline-only payment status breakdown
     offlineNotPaid: number;
     offlineCredit: number;
     offlineNoCharge: number;
@@ -144,8 +143,6 @@ type SummaryCardsProps = {
 };
 
 export default function SummaryCards({ summary }: SummaryCardsProps) {
-  // Total Received is derived purely from offline data, since online
-  // payments settle instantly and don't carry a "not paid" state.
   const totalReceived =
     summary.offlineRevenue -
     summary.offlineNotPaid -
@@ -153,7 +150,6 @@ export default function SummaryCards({ summary }: SummaryCardsProps) {
 
   return (
     <div className="space-y-3">
-      {/* Top row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* ===================== Total Revenue ===================== */}
         <div className="bg-[#FDE3D3] rounded-2xl shadow-sm border border-orange-200/50 p-4 sm:p-5">
@@ -163,6 +159,7 @@ export default function SummaryCards({ summary }: SummaryCardsProps) {
                 className="w-5 h-5 text-orange-500"
                 strokeWidth={2.5}
               />
+
               <h3 className="text-gray-800 text-lg font-semibold">
                 Total Revenue
               </h3>
@@ -180,10 +177,12 @@ export default function SummaryCards({ summary }: SummaryCardsProps) {
           </div>
 
           {/* Revenue Details */}
-          <div className="grid grid-cols-2 gap-x-8 gap-y-5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-4">
             <div>
-              <p className="text-gray-600 text-base font-medium">Charges</p>
-              <p className="text-emerald-600 font-bold text-lg">
+              <p className="text-gray-600 text-base md:text-sm font-medium">
+                Charges
+              </p>
+              <p className="text-emerald-600 text-lg md:text-base font-bold">
                 ₹
                 {summary.totalCharges.toLocaleString("en-IN", {
                   minimumFractionDigits: 2,
@@ -192,20 +191,10 @@ export default function SummaryCards({ summary }: SummaryCardsProps) {
             </div>
 
             <div>
-              <p className="text-gray-600 text-base font-medium">
-                Discounts
+              <p className="text-gray-600 text-base md:text-sm font-medium">
+                Taxes
               </p>
-              <p className="text-rose-500 font-bold text-lg">
-                ₹
-                {summary.totalMerchantDiscount.toLocaleString("en-IN", {
-                  minimumFractionDigits: 2,
-                })}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-gray-600 text-base font-medium">Taxes</p>
-              <p className="text-sky-600 font-bold text-lg">
+              <p className="text-sky-600 text-lg md:text-base font-bold">
                 ₹
                 {summary.totalTaxes.toLocaleString("en-IN", {
                   minimumFractionDigits: 2,
@@ -214,8 +203,22 @@ export default function SummaryCards({ summary }: SummaryCardsProps) {
             </div>
 
             <div>
-              <p className="text-gray-600 text-base font-medium">Avg/day</p>
-              <p className="text-violet-600 font-bold text-lg">
+              <p className="text-gray-600 text-base md:text-sm font-medium">
+                Discounts
+              </p>
+              <p className="text-rose-500 text-lg md:text-base font-bold">
+                ₹
+                {summary.totalMerchantDiscount.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                })}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-gray-600 text-base md:text-sm font-medium">
+                Avg/day
+              </p>
+              <p className="text-violet-600 text-lg md:text-base font-bold">
                 ₹
                 {summary.averageRevenue.toLocaleString("en-IN", {
                   maximumFractionDigits: 2,
@@ -233,6 +236,7 @@ export default function SummaryCards({ summary }: SummaryCardsProps) {
                 className="w-5 h-5 text-emerald-600"
                 strokeWidth={2.5}
               />
+
               <h3 className="text-gray-800 text-lg font-semibold">
                 Total Received
               </h3>
@@ -251,10 +255,10 @@ export default function SummaryCards({ summary }: SummaryCardsProps) {
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <p className="text-gray-600 text-base font-medium">
+              <p className="text-gray-600 text-base md:text-sm font-medium">
                 Not Paid
               </p>
-              <p className="text-orange-500 font-bold text-lg">
+              <p className="text-orange-500 text-lg md:text-base font-bold">
                 ₹
                 {summary.offlineNotPaid.toLocaleString("en-IN", {
                   minimumFractionDigits: 2,
@@ -263,10 +267,10 @@ export default function SummaryCards({ summary }: SummaryCardsProps) {
             </div>
 
             <div>
-              <p className="text-gray-600 text-base font-medium">
+              <p className="text-gray-600 text-base md:text-sm font-medium">
                 Credit
               </p>
-              <p className="text-amber-500 font-bold text-lg">
+              <p className="text-amber-500 text-lg md:text-base font-bold">
                 ₹
                 {summary.offlineCredit.toLocaleString("en-IN", {
                   minimumFractionDigits: 2,
@@ -275,10 +279,10 @@ export default function SummaryCards({ summary }: SummaryCardsProps) {
             </div>
 
             <div>
-              <p className="text-gray-600 text-base font-medium">
+              <p className="text-gray-600 text-base md:text-sm font-medium">
                 No Charge
               </p>
-              <p className="text-sky-500 font-bold text-lg">
+              <p className="text-sky-500 text-lg md:text-base font-bold">
                 ₹
                 {summary.offlineNoCharge.toLocaleString("en-IN", {
                   minimumFractionDigits: 2,
