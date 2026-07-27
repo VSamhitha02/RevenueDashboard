@@ -1,6 +1,7 @@
 "use client";
 import HourlySegmentRevenue from "./HourlySegmentRevenue";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -39,7 +40,35 @@ const formatChartValue = (value: number) => {
 const BAR_COLORS = ["#22c55e", "#f97316", "#3b82f6", "#a855f7", "#ef4444", "#14b8a6"];
 
 export default function ItemSegmentDashboard({ data }: Props) {
-  const [selectedSegment, setSelectedSegment] = useState("");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Source of truth is the URL — read the current ?segment= value on every
+  // render so back/forward navigation and shared links work correctly.
+  const segmentFromUrl = searchParams.get("segment") ?? "";
+  const [selectedSegment, setSelectedSegment] = useState(segmentFromUrl);
+
+  // Keeps every other existing query param intact and just adds/updates
+  // ?segment=, using replace (not push) so picking a segment doesn't spam
+  // the browser history.
+  const updateSegmentInUrl = useCallback(
+    (segment: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (segment) {
+        params.set("segment", segment);
+      } else {
+        params.delete("segment");
+      }
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [pathname, router, searchParams]
+  );
+
+  const handleSegmentChange = (segment: string) => {
+    setSelectedSegment(segment);
+    updateSegmentInUrl(segment);
+  };
 
 const dashboard = getItemSegmentDashboard(data, selectedSegment);
 
@@ -54,8 +83,9 @@ const {
 
 useEffect(() => {
   if (!selectedSegment && segments.length > 0) {
-    setSelectedSegment(segments[0]);
+    handleSegmentChange(segments[0]);
   }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [segments, selectedSegment]);
 
  
@@ -100,7 +130,7 @@ console.log(topItems);
 
         <select
           value={selectedSegment}
-          onChange={(e) => setSelectedSegment(e.target.value)}
+          onChange={(e) => handleSegmentChange(e.target.value)}
           className="border text-black rounded-md px-4 py-2"
         >
           {segments.map((segment: string) => (
