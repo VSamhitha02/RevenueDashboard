@@ -555,10 +555,13 @@ export function getItemSegmentDashboard(rawData: any, selectedSegment: string) {
   const getSegment = (item: any) => item.parentSegmentId ?? item.segmentId ?? item.segment
    const segments = Array.from(new Set(items.map(getSegment).filter(Boolean)))
 
-  const filteredItems = !selectedSegment
+   const filteredItems = !selectedSegment
     ? items
-    : items.filter((i: any) => getSegment(i) === selectedSegment)
-
+    : items.filter((i: any) =>
+        [i.parentSegmentId, i.segmentId, i.segment]
+          .filter(Boolean)
+          .some((v) => v.toLowerCase() === selectedSegment.toLowerCase()),
+      )
   const totalRevenue = filteredItems.reduce(
     (s: number, i: any) => s + i.revenue,
     0,
