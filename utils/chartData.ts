@@ -408,7 +408,7 @@ export function getPaymentModeAnalysis(rawData: any) {
     }
 
     const map = new Map();
-  const othersBreakdown: Record<string, number> = {};
+    const othersBreakdown: Record<string, number> = {};
 
     payment.forEach((item: any) => {
       if (!item || !item.invoiceDate) return;
@@ -429,68 +429,68 @@ export function getPaymentModeAnalysis(rawData: any) {
       const mode = String(rawMode).trim().toLowerCase().replace(/\s+/g, "");
       const rev = Number(item.totalRevenue || item.revenue || 0);
 
-switch (mode) {
-  case "cash":
-    row.cash += rev;
-    break;
+      switch (mode) {
+        case "cash":
+          row.cash += rev;
+          break;
 
-  case "gateway":
-  case "online":
-    row.gateway += rev;
-    break;
+        case "gateway":
+        case "online":
+          row.gateway += rev;
+          break;
 
-  // case "upi":
-  // case "upipayment":
-  //   row.upi += rev;
-  //   break;
+        // case "upi":
+        // case "upipayment":
+        //   row.upi += rev;
+        //   break;
 
-  case "card":
-  case "cards":
-  case "creditcard":
-  case "debitcard":
-    row.card += rev;
-    break;
+        case "card":
+        case "cards":
+        case "creditcard":
+        case "debitcard":
+          row.card += rev;
+          break;
 
-  case "notpaid":
-  case "due":
-    row.notPaid += rev;
-    break;
+        case "notpaid":
+        case "due":
+          row.notPaid += rev;
+          break;
 
-default:
-  row.noCharge += rev;
+        default:
+          row.noCharge += rev;
 
-  const key = rawMode || "Unknown";
-  othersBreakdown[key] = (othersBreakdown[key] || 0) + rev;
+          const key = rawMode || "Unknown";
+          othersBreakdown[key] = (othersBreakdown[key] || 0) + rev;
 
-  break;
-}
+          break;
+      }
     });
 
     const barData = Array.from(map.values());
     const totals = { gateway: 0, cash: 0, upi: 0, card: 0, noCharge: 0, notPaid: 0 };
 
-barData.forEach((item: any) => {
-  totals.gateway += item.gateway;
-  totals.cash += item.cash;
-  // totals.upi += item.upi;
-  totals.card += item.card;
-  totals.noCharge += item.noCharge;
-  totals.notPaid += item.notPaid;
+    barData.forEach((item: any) => {
+      totals.gateway += item.gateway;
+      totals.cash += item.cash;
+      // totals.upi += item.upi;
+      totals.card += item.card;
+      totals.noCharge += item.noCharge;
+      totals.notPaid += item.notPaid;
     });
 
-const pieData = [
-  { name: "Cash", value: totals.cash },
-  { name: "Gateway", value: totals.gateway },
-  // { name: "UPI", value: totals.upi },
-  { name: "Card", value: totals.card },
-  { name: "Others", value: totals.noCharge },
-  { name: "Not Paid", value: totals.notPaid },
-];
+    const pieData = [
+      { name: "Cash", value: totals.cash },
+      { name: "Gateway", value: totals.gateway },
+      // { name: "UPI", value: totals.upi },
+      { name: "Card", value: totals.card },
+      { name: "Others", value: totals.noCharge },
+      { name: "Not Paid", value: totals.notPaid },
+    ];
 
     return { pieData, barData, othersBreakdown };
   } catch (error) {
     console.error("CRASH inside getPaymentModeAnalysis:", error);
-    return { pieData: [], barData: [], othersBreakdown: {}};
+    return { pieData: [], barData: [], othersBreakdown: {} };
   }
 }
 
@@ -515,37 +515,43 @@ export function getRevenueLeakageAnalysis(rawData: any) {
   return Array.from(map.values());
 }
 
+// ---------------------------------------------------------------------------
+// Item / segment analysis. `revenue` here is driven off `finalCost`
+// (previously `netAmount ?? itemTotal`) — finalCost is treated as the
+// source of truth for per-item revenue across segments.
+// ---------------------------------------------------------------------------
 export function getItemSegmentAnalysis(rawData: any) {
   const data = normalizeData(rawData);
 
-const offlineItems = (data.offline_item_wise ?? []).map((item: any) => ({
-  itemName: item.name,
-  segment: item.segment,
-  orderType: item.orderType,
-  date: item.invoiceDate,
+  const offlineItems = (data.offline_item_wise ?? []).map((item: any) => ({
+    itemName: item.name,
+    segment: item.segment,
+    orderType: item.orderType,
+    date: item.invoiceDate,
 
-  quantity: Number(item.totalQuantity ?? 0),
-  revenue: Number(item.netAmount ?? item.itemTotal ?? 0),
-finalCost:  Number(item.finalCost ?? 0),
-  discountAmount: Number(item.discountAmount ?? 0),
-  itemTax: Number(item.itemTax ?? item.totalTax ?? 0),
-  charges: Number(item.charges ?? 0),
-}));
+    quantity: Number(item.totalQuantity ?? 0),
+    revenue: Number(item.finalCost ?? 0),
+    finalCost: Number(item.finalCost ?? 0),
+    discountAmount: Number(item.discountAmount ?? 0),
+    itemTax: Number(item.itemTax ?? item.totalTax ?? 0),
+    charges: Number(item.charges ?? 0),
+  }));
 
-const onlineItems = (data.online_item_wise ?? []).map((item: any) => ({
-  itemName: item.name,
-  segment: item.segment,
-  orderType: item.orderType,
-  date: item.orderDate,
+  const onlineItems = (data.online_item_wise ?? []).map((item: any) => ({
+    itemName: item.name,
+    segment: item.segment,
+    orderType: item.orderType,
+    date: item.orderDate,
 
-  quantity: Number(item.totalQuantity ?? 0),
-  revenue: Number(item.netAmount ?? item.itemTotal ?? 0),
-finalCost:  Number(item.finalCost ?? 0),
-  itemTotal: Number(item.itemTotal ?? 0),
-  discountAmount: Number(item.discountAmount ?? 0),
-  itemTax: Number(item.itemTax ?? item.totalTax ?? 0),
-  charges: Number(item.charges ?? 0),
-}));
+    quantity: Number(item.totalQuantity ?? 0),
+    revenue: Number(item.finalCost ?? 0),
+    finalCost: Number(item.finalCost ?? 0),
+    itemTotal: Number(item.itemTotal ?? 0),
+    discountAmount: Number(item.discountAmount ?? 0),
+    itemTax: Number(item.itemTax ?? item.totalTax ?? 0),
+    charges: Number(item.charges ?? 0),
+  }));
+
   return { offlineItems, onlineItems };
 }
 
@@ -554,15 +560,15 @@ export function getItemSegmentDashboard(rawData: any, selectedSegment: string) {
 
   const items = [...(data.offlineItems ?? []), ...(data.onlineItems ?? [])];
 
-const segments = Array.from(
-  new Set(items.map((i: any) => i.segment).filter(Boolean))
-);
-  // const filteredItems =
-  //   selectedSegment === "All" ? items : items.filter((i: any) => i.segment === selectedSegment);
-const filteredItems =
-  !selectedSegment
-    ? items
-    : items.filter((i: any) => i.segment === selectedSegment);
+  const segments = Array.from(
+    new Set(items.map((i: any) => i.segment).filter(Boolean))
+  );
+
+  const filteredItems =
+    !selectedSegment || selectedSegment === "All"
+      ? items
+      : items.filter((i: any) => i.segment === selectedSegment);
+
   // ---------------- Cards ----------------
 
   const totalRevenue = filteredItems.reduce((s: number, i: any) => s + i.revenue, 0);
@@ -610,46 +616,47 @@ const filteredItems =
 
   // ---------------- Top Items ----------------
 
-const itemsMap: Record<string, any> = {};
+  const itemsMap: Record<string, any> = {};
 
-filteredItems.forEach((i: any) => {
-  if (!i.itemName) return;
+  filteredItems.forEach((i: any) => {
+    if (!i.itemName) return;
 
-  if (!itemsMap[i.itemName]) {
-    itemsMap[i.itemName] = {
-      itemName: i.itemName,
-      segment: i.segment,
+    if (!itemsMap[i.itemName]) {
+      itemsMap[i.itemName] = {
+        itemName: i.itemName,
+        segment: i.segment,
 
-      totalRevenue: 0,
-      orders: 0,
+        totalRevenue: 0,
+        orders: 0,
 
-      finalCost:0,
-      discountAmount: 0,
-      itemTax: 0,
-      charges: 0,
-      quantity: 0,
-    };
-  }
+        finalCost: 0,
+        discountAmount: 0,
+        itemTax: 0,
+        charges: 0,
+        quantity: 0,
+      };
+    }
 
-  itemsMap[i.itemName].totalRevenue += Number(i.revenue ?? 0);
-  itemsMap[i.itemName].orders += Number(i.quantity ?? 0);
-console.log("i.finalCost, i.name",i.finalCost,i.itemName)
- itemsMap[i.itemName].finalCost += Number(i.finalCost ?? 0);
-  itemsMap[i.itemName].discountAmount += Number(i.discountAmount ?? 0);
-  itemsMap[i.itemName].itemTax += Number(i.itemTax ?? 0);
-  itemsMap[i.itemName].charges += Number(i.charges ?? 0);
-  itemsMap[i.itemName].quantity += Number(i.quantity ?? 0);
-});
+    itemsMap[i.itemName].totalRevenue += Number(i.revenue ?? 0);
+    itemsMap[i.itemName].orders += Number(i.quantity ?? 0);
 
-const topItems = Object.values(itemsMap)
-  .sort((a: any, b: any) => b.totalRevenue - a.totalRevenue)
-  .map((i: any) => ({
-    ...i,
-    avgRevenuePerDay:
-      uniqueDays.size === 0 ? 0 : i.totalRevenue / uniqueDays.size,
-    avgOrderValue:
-      i.orders === 0 ? 0 : i.totalRevenue / i.orders,
-  }));
+    itemsMap[i.itemName].finalCost += Number(i.finalCost ?? 0);
+    itemsMap[i.itemName].discountAmount += Number(i.discountAmount ?? 0);
+    itemsMap[i.itemName].itemTax += Number(i.itemTax ?? 0);
+    itemsMap[i.itemName].charges += Number(i.charges ?? 0);
+    itemsMap[i.itemName].quantity += Number(i.quantity ?? 0);
+  });
+
+  const topItems = Object.values(itemsMap)
+    .sort((a: any, b: any) => b.totalRevenue - a.totalRevenue)
+    .map((i: any) => ({
+      ...i,
+      avgRevenuePerDay:
+        uniqueDays.size === 0 ? 0 : i.totalRevenue / uniqueDays.size,
+      avgOrderValue:
+        i.orders === 0 ? 0 : i.totalRevenue / i.orders,
+    }));
+
   return {
     segments,
     cards: {
@@ -676,6 +683,8 @@ export function getHourlyRevenueTrend(rawData: any, cutoffHour: number = 5) {
   const offline = data.offline_revenue_hour_wise ?? [];
   const online = data.online_revenue_hour_wise ?? [];
 
+  // 24 points: cutoffHour -> ... -> (cutoffHour - 1) wrapped around.
+  // e.g. cutoffHour = 5 -> [5 AM, 6 AM, ..., 11 PM, 12 AM, ..., 4 AM]
   const hours = Array.from({ length: 24 }, (_, i) => {
     const actualHour = (cutoffHour + i) % 24;
     return {
@@ -685,6 +694,7 @@ export function getHourlyRevenueTrend(rawData: any, cutoffHour: number = 5) {
     };
   });
 
+  // Map actual clock hour -> its position in the `hours` array above
   const hourToIndex = new Map(hours.map((h, idx) => [h.hour, idx]));
 
   offline.forEach((item: any) => {
@@ -767,6 +777,8 @@ export function getHourlySegmentRevenue(
     chartData.map((item, index) => [item.hour, index])
   );
 
+  // ---------------- Offline ----------------
+
   offline.forEach((item: any) => {
     if (!matchesSegment(item)) return;
 
@@ -776,6 +788,8 @@ export function getHourlySegmentRevenue(
       chartData[idx].offline += Number(item.finalCost ?? 0);
     }
   });
+
+  // ---------------- Online ----------------
 
   online.forEach((item: any) => {
     if (!matchesSegment(item)) return;
@@ -792,6 +806,8 @@ export function getHourlySegmentRevenue(
       );
     }
   });
+
+  // ---------------- Total ----------------
 
   chartData.forEach((item) => {
     item.total = item.offline + item.online;

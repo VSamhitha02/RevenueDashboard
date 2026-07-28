@@ -21,14 +21,17 @@ type SummaryCardsProps = {
 };
 
 export default function SummaryCards({ summary }: SummaryCardsProps) {
-  // Total Received is derived purely from offline data, since online
-  // payments settle instantly and don't carry a "not paid" state.
-  const totalReceived =
+  // Offline "received" excludes Not Paid / Credit — online has no unpaid
+  // state (it settles instantly), so the whole of onlineRevenue counts as
+  // received. Total Received now reflects offline + online together.
+  const offlineReceived =
     summary.offlineRevenue - summary.offlineNotPaid - summary.offlineCredit;
+  const onlineReceived = summary.onlineRevenue;
+  const totalReceived = offlineReceived + onlineReceived;
 
   return (
     <div className="space-y-3">
-      {/* Top row: Revenue vs Received (offline-only) */}
+      {/* Top row: Revenue vs Received (offline + online) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* Total Revenue */}
         <div className="bg-[#FDE3D3] rounded-2xl shadow-sm p-5 border border-orange-200/50">
@@ -74,7 +77,7 @@ export default function SummaryCards({ summary }: SummaryCardsProps) {
           </div>
         </div>
 
-        {/* Total Received - offline only */}
+        {/* Total Received - offline + online */}
         <div className="bg-[#CFF7E3] rounded-2xl shadow-sm p-5 border border-emerald-200/50">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -90,7 +93,19 @@ export default function SummaryCards({ summary }: SummaryCardsProps) {
               ₹{totalReceived.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
             </p>
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+            <div>
+              <p className="text-gray-600 text-sm">Offline</p>
+              <p className="text-emerald-700 font-bold text-base">
+                ₹{offlineReceived.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </p>
+            </div>
+            <div>
+              <p className="text-gray-600 text-sm">Online</p>
+              <p className="text-emerald-700 font-bold text-base">
+                ₹{onlineReceived.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </p>
+            </div>
             <div>
               <p className="text-gray-600 text-sm">Not Paid</p>
               <p className="text-orange-500 font-bold text-base">
