@@ -485,6 +485,10 @@ export function getItemSegmentDashboard(rawData: any, selectedSegment: string) {
   const data = getItemSegmentAnalysis(rawData);
 
   const items = [...(data.offlineItems ?? []), ...(data.onlineItems ?? [])];
+  console.log(
+  "Available segments:",
+  items.map((i: any) => i.segment)
+);
 
   // const segments = [
   //   "All",
@@ -495,11 +499,16 @@ const segments = Array.from(
 );
   // const filteredItems =
   //   selectedSegment === "All" ? items : items.filter((i: any) => i.segment === selectedSegment);
-const filteredItems =
-  !selectedSegment
-    ? items
-    : items.filter((i: any) => i.segment === selectedSegment);
-  // ---------------- Cards ----------------
+// const filteredItems =
+//   !selectedSegment
+//     ? items
+//     : items.filter((i: any) => i.segment === selectedSegment);
+//   // ---------------- Cards ----------------
+const filteredItems = items.filter(
+  (i: any) =>
+    i.segment?.trim().toLowerCase() ===
+    selectedSegment.trim().toLowerCase()
+);
 
   const totalRevenue = filteredItems.reduce((s: number, i: any) => s + i.revenue, 0);
   const totalOrders = filteredItems.reduce((s: number, i: any) => s + i.quantity, 0);

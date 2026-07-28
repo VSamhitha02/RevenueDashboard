@@ -1,3 +1,4 @@
+// app/api/revenue/route.ts
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -11,25 +12,29 @@ export async function POST(req: Request) {
         headers: {
           "Content-Type": "application/json",
           "accept": "application/json",
-          "X-API-Key":
-            "XgshOzUVLPgvzOrY_AVz0d8sMU57Cd5crVdP-2HnIYY",
+          "X-API-Key": "XgshOzUVLPgvzOrY_AVz0d8sMU57Cd5crVdP-2HnIYY",
         },
         body: JSON.stringify(body),
       }
     );
 
+    const rawText = await response.text();
+
     if (!response.ok) {
-      throw new Error("Failed to fetch revenue data");
+      console.error(`Backend returned ${response.status}:`, rawText);
+      return NextResponse.json(
+        { details: `Backend error (${response.status}): ${rawText}` },
+        { status: response.status }
+      );
     }
 
-    const data = await response.json();
-
+    // Try parsing JSON safely
+    const data = JSON.parse(rawText);
     return NextResponse.json(data);
-  } catch (error) {
-    console.error(error);
-
+  } catch (error: any) {
+    console.error("API Route Error:", error);
     return NextResponse.json(
-      { message: "Something went wrong" },
+      { details: error.message || "Failed to reach internal server" },
       { status: 500 }
     );
   }

@@ -60,7 +60,6 @@
 //   //   fetchData(range);
 //   //   // eslint-disable-next-line react-hooks/exhaustive-deps
 //   // }, []);
-  
 
 //   function handleDateSelect(
 //     option: DateFilterOption,
@@ -77,8 +76,6 @@
 //     const range = getDateRange(option, customDate, customStart, customEnd);
 //     fetchData(range);
 //   }
-
-  
 
 //   // if (!data) {
 //   //   return <div className="p-10">No data found</div>;
@@ -99,7 +96,7 @@
 //           <h1 className="text-4xl font-bold text-black">
 //             Revenue Dashboard
 //           </h1>
-         
+
 //         </div>
 // {loading && (
 //   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -161,15 +158,6 @@ import { useEffect, useState } from "react";
 import { getRevenueDashboard } from "@/lib/axios";
 import { getDateRange, DateFilterOption } from "@/utils/dateRanges";
 
-import DateFilter from "./DateFilter";
-import SummaryCards from "./SummaryCards";
-import RevenueTrend from "./RevenueTrend";
-import OrderTypeRevenueAnalysis from "./OrderTypeRevenueAnalysis";
-import PaymentModeAnalysis from "./PaymentModeAnalysis";
-import ItemSegmentDashboard from "./ItemSegmentDashboard";
-import HourlyRevenueTrend from "./HourlyRevenueTrend";
-import HourlySegmentRevenue from "./HourlySegmentRevenue";
-
 import {
   getSummaryData,
   getRevenueTrend,
@@ -179,12 +167,15 @@ import {
   getHourlySegmentRevenue,
 } from "@/utils/chartData";
 import { useSearchParams } from "next/navigation";
+import ItemSegmentDashboard from "@/components/dashboard/ItemSegmentDashboard";
+import DateFilter from "@/components/dashboard/DateFilter";
 
 interface DashboardProps {
   fseId: string;
+  selectedSegment: string;
 }
 
-export default function Dashboard({ fseId }: DashboardProps) {
+export default function Segment({ fseId, selectedSegment }: DashboardProps) {
   const searchParams = useSearchParams();
 
   const dateFilterParam =
@@ -233,105 +224,56 @@ export default function Dashboard({ fseId }: DashboardProps) {
       dateFilterParam,
       customDateParam,
       customStartParam,
-      customEndParam
+      customEndParam,
     );
     fetchData(range);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  
 
   function handleDateSelect(
     option: DateFilterOption,
     customDate?: string,
     customStart?: string,
-    customEnd?: string
+    customEnd?: string,
   ) {
     setDateOption(option);
 
     if (option === "Custom Date" && !customDate) return;
-    if (option === "Custom Date Range" && (!customStart || !customEnd))
-      return;
+    if (option === "Custom Date Range" && (!customStart || !customEnd)) return;
 
     const range = getDateRange(option, customDate, customStart, customEnd);
     fetchData(range);
   }
 
-  
-
   // if (!data) {
   //   return <div className="p-10">No data found</div>;
   // }
 
-  const hourlyRevenue = getHourlyRevenueTrend(data);
-
-  // Generate all chart data AFTER data is available
-  const summary = getSummaryData(data);
-  const revenueTrend = getRevenueTrend(data);
-  const paymentMode = getPaymentModeAnalysis(data);
-  const orderTypeRevenue = getOrderTypeRevenueAnalysis(data);
-  const chartData = getHourlySegmentRevenue(data);
+ 
   return (
     <main className="min-h-screen bg-slate-100">
       <div className="max-w-7xl mx-auto px-8 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold text-black">
-            Revenue Dashboard
-          </h1>
-         
-        </div>
-{loading && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-    <div className="bg-white rounded-xl shadow-xl px-8 py-6 flex flex-col items-center">
-      <div className="h-10 w-10 animate-spin rounded-full border-4 border-orange-500 border-t-transparent"></div>
+        {loading && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white rounded-xl shadow-xl px-8 py-6 flex flex-col items-center">
+              <div className="h-10 w-10 animate-spin rounded-full border-4 border-orange-500 border-t-transparent"></div>
 
-      <p className="mt-4 text-lg font-semibold text-gray-800">
-        Loading...
-      </p>
+              <p className="mt-4 text-lg font-semibold text-gray-800">
+                Loading...
+              </p>
 
-      <p className="mt-1 text-sm text-gray-500">
-        Fetching dashboard data
-      </p>
-    </div>
-  </div>
-)}
+              <p className="mt-1 text-sm text-gray-500">
+                Fetching dashboard data
+              </p>
+            </div>
+          </div>
+        )}
         {/* <FilterBar orderType={orderType} setOrderType={setOrderType} /> */}
-       <DateFilter selected={dateOption} onSelect={handleDateSelect} />
-        <div className="mt-6">
-          <SummaryCards summary={summary} />
-        </div>
+        <DateFilter selected={dateOption} onSelect={handleDateSelect} />
 
         <div className="mt-8">
-          <RevenueTrend
-            data={revenueTrend}
-            dateOption={dateOption}
-          />
+          <ItemSegmentDashboard data={data} selectedSegment={selectedSegment} />
         </div>
-
-        <div className="mt-4">
-          <HourlyRevenueTrend data={hourlyRevenue} />
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 mt-8">
-          <PaymentModeAnalysis
-            pieData={paymentMode.pieData}
-            barData={paymentMode.barData}
-            othersBreakdown={paymentMode.othersBreakdown}
-          />
-        </div>
-
-        <div className="mt-8">
-          <OrderTypeRevenueAnalysis
-            data={orderTypeRevenue.rows}
-            orderTypes={orderTypeRevenue.orderTypes}
-            orderTypeLabels={orderTypeRevenue.orderTypeLabels}
-          />
-        </div>
-
-        {/* <div className="mt-8">
-         
-          <ItemSegmentDashboard data={data} />
-
-        </div> */}
       </div>
     </main>
   );
