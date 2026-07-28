@@ -327,11 +327,11 @@ export default function Dashboard({ fseId }: DashboardProps) {
           />
         </div>
 
-        <div className="mt-8">
-          {/* <HourlySegmentRevenue chartData={chartData} /> */}
+        {/* <div className="mt-8">
+
           <ItemSegmentDashboard data={data} />
 
-        </div>
+        </div> */}
       </div>
     </main>
   );

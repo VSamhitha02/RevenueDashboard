@@ -1,6 +1,7 @@
 "use client";
 import HourlySegmentRevenue from "./HourlySegmentRevenue";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -21,6 +22,7 @@ import {
 
 type Props = {
   data: any; // RAW response JSON object
+    selectedSegment: string;
 };
 
 const formatCurrency = (value: number) =>
@@ -39,7 +41,7 @@ const formatChartValue = (value: number) => {
 const BAR_COLORS = ["#22c55e", "#f97316", "#3b82f6", "#a855f7", "#ef4444", "#14b8a6"];
 
 export default function ItemSegmentDashboard({ data }: Props) {
-  const [selectedSegment, setSelectedSegment] = useState("");
+  const [selectedSegment, setSelectedSegment] = useState("Food");
 
 const dashboard = getItemSegmentDashboard(data, selectedSegment);
 
@@ -52,11 +54,12 @@ const {
   orderTypeLabels,
 } = dashboard;
 
-useEffect(() => {
-  if (!selectedSegment && segments.length > 0) {
-    setSelectedSegment(segments[0]);
-  }
-}, [segments, selectedSegment]);
+// useEffect(() => {
+//   if (!selectedSegment && segments.length > 0) {
+//     handleSegmentChange(segments[0]);
+//   }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+// }, [segments, selectedSegment]);
 
  
   const hourlySegmentData = getHourlySegmentRevenue(data, selectedSegment);
@@ -98,9 +101,9 @@ console.log(topItems);
       <div className="flex justify-between items-center">
         <h2 className="text-2xl text-black font-bold">{selectedSegment} Segment Report</h2>
 
-        <select
+        {/* <select
           value={selectedSegment}
-          onChange={(e) => setSelectedSegment(e.target.value)}
+          onChange={(e) => handleSegmentChange(e.target.value)}
           className="border text-black rounded-md px-4 py-2"
         >
           {segments.map((segment: string) => (
@@ -108,7 +111,7 @@ console.log(topItems);
               {segment}
             </option>
           ))}
-        </select>
+        </select> */}
       </div>
 
       {/* ---------------- Cards ---------------- */}
