@@ -21,6 +21,7 @@ import {
 
 type Props = {
   data: any; // RAW response JSON object
+  selectedSegment:string
 };
 
 const formatCurrency = (value: number) =>
@@ -38,10 +39,12 @@ const formatChartValue = (value: number) => {
 
 const BAR_COLORS = ["#22c55e", "#f97316", "#3b82f6", "#a855f7", "#ef4444", "#14b8a6"];
 
-export default function ItemSegmentDashboard({ data }: Props) {
-  const [selectedSegment, setSelectedSegment] = useState("");
+export default function ItemSegmentDashboard({ data,selectedSegment}: Props) {
+  //const [selectedSegment, setSelectedSegment] = useState("");
 
 const dashboard = getItemSegmentDashboard(data, selectedSegment);
+console.log("selectedSegment:", selectedSegment);
+
 
 const {
   segments,
@@ -52,11 +55,11 @@ const {
   orderTypeLabels,
 } = dashboard;
 
-useEffect(() => {
-  if (!selectedSegment && segments.length > 0) {
-    setSelectedSegment(segments[0]);
-  }
-}, [segments, selectedSegment]);
+// useEffect(() => {
+//   if (!selectedSegment && segments.length > 0) {
+//     setSelectedSegment(segments[0]);
+//   }
+// }, [segments, selectedSegment]);
 
  
   const hourlySegmentData = getHourlySegmentRevenue(data);
@@ -96,9 +99,9 @@ console.log(topItems);
     <div className="space-y-8">
       {/* ---------------- Filter ---------------- */}
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl text-black font-bold">{selectedSegment} Segment Report</h2>
+        <h2 className="text-2xl text-black font-bold">Segment Report</h2>
 
-        <select
+        {/* <select
           value={selectedSegment}
           onChange={(e) => setSelectedSegment(e.target.value)}
           className="border text-black rounded-md px-4 py-2"
@@ -108,7 +111,7 @@ console.log(topItems);
               {segment}
             </option>
           ))}
-        </select>
+        </select>   */}
       </div>
 
       {/* ---------------- Cards ---------------- */}
@@ -208,7 +211,7 @@ console.log(topItems);
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="bg-orange-200">
-                <th className="px-3 py-2 text-left text-black">Segment</th>
+            <th className="px-3 py-2 text-center text-black">S. No.</th>
                 <th className="px-3 py-2 text-left text-black">Item Name</th>
                    <th className="px-3 py-2 text-right text-black">Quantity</th>
                 <th className="px-3 py-2 text-right text-black">Item Total</th>
@@ -240,7 +243,9 @@ console.log(topItems);
                         : "bg-blue-300 border-b border-blue-200"
                     }
                   >
-                    <td className="px-3 py-1.5 leading-tight text-black">{item.segment}</td>
+                   <td className="px-3 py-1.5 leading-tight text-center text-black">
+  {index + 1}
+</td>
                     <td className="px-3 py-1.5 leading-tight text-black">{item.itemName}</td>
                       <td className="px-3 py-1.5 leading-tight text-right text-black">
                       {quantity}
@@ -271,19 +276,19 @@ console.log(topItems);
                   Total
                 </td>
                 <td className="px-3 py-2 text-right text-black leading-tight">
+                     {tableTotals.quantity} 
+                </td>
+                <td className="px-3 py-2 text-right text-black leading-tight">
                   {formatCurrency(tableTotals.finalCost)}
                 </td>
                 <td className="px-3 py-2 text-right text-black leading-tight">
                   {formatCurrency(tableTotals.discount)}
                 </td>
                 <td className="px-3 py-2 text-right text-black leading-tight">
-                  {formatCurrency(tableTotals.taxes)}
+                 {formatCurrency(tableTotals.taxes)} 
                 </td>
                 <td className="px-3 py-2 text-right text-black leading-tight">
-                  {formatCurrency(tableTotals.charges)}
-                </td>
-                <td className="px-3 py-2 text-right text-black leading-tight">
-                  {tableTotals.quantity}
+              {formatCurrency(tableTotals.charges)}
                 </td>
                 <td className="px-3 py-2 text-right text-black leading-tight">
                   {formatCurrency(tableTotals.grandTotal)}
