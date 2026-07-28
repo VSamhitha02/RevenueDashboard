@@ -37,13 +37,6 @@ type Props = {
   othersBreakdown: Record<string, number>;
 };
 
-// const formatAmount = (value: number) => {
-//   if (value >= 100000) {
-//     return `₹${(value / 100000).toFixed(1)}L`;
-//   }
-
-//   return `₹${Number(value).toLocaleString("en-IN")}`;
-// };
 const formatAmount = (value: number, short = false) => {
   if (value >= 100000) {
     return `₹${(value / 100000).toFixed(1)}L`;
@@ -79,6 +72,17 @@ export default function PaymentModeAnalysis({
     0,
   );
 
+  // Total per bar (per date) — used for the "total" label shown above each stacked column
+  const barDataWithTotal = barData.map((item: any) => ({
+    ...item,
+    total:
+      (item.gateway || 0) +
+      (item.cash || 0) +
+      (item.card || 0) +
+      (item.noCharge || 0) +
+      (item.notPaid || 0),
+  }));
+
   const paymentNames: Record<string, string> = {
     gateway: "Gateway",
     cash: "Cash",
@@ -111,8 +115,8 @@ export default function PaymentModeAnalysis({
   };
   const average = barData.length === 0 ? 0 : totalRevenue / barData.length;
   const sortedLegend = [...pieData].sort((a, b) => b.value - a.value);
-  const sortedLegendBar = [...pieData].sort((a, b) => b.value - a.value);
   const showLabels = barData.length <= 4;
+
   return (
     <div className="bg-orange-100 rounded-lg shadow-md p-5">
       <h2 className="text-xl font-semibold text-black mb-6">
@@ -262,10 +266,10 @@ export default function PaymentModeAnalysis({
         </div>
       </div>
 
-      {/* ---------------- BAR CHART ---------------- */}
+      {/* ---------------- STACKED BAR CHART ---------------- */}
       <div className="mt-10" />
       <ResponsiveContainer width="100%" height={380}>
-        <BarChart data={barData} margin={{ top: 35, left: 35 }}>
+        <BarChart data={barDataWithTotal} margin={{ top: 35, left: 35 }}>
           <CartesianGrid strokeDasharray="3 3" />
 
           <XAxis dataKey="date" />
@@ -302,41 +306,27 @@ export default function PaymentModeAnalysis({
                   marginTop: "10px",
                 }}
               >
-                <Legend
-                  content={() => (
-                    <div
+                {BAR_LEGEND.map((item) => (
+                  <div
+                    key={item.name}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    <span
                       style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        flexWrap: "wrap",
-                        gap: "16px",
-                        marginTop: "10px",
+                        width: 12,
+                        height: 12,
+                        borderRadius: 2,
+                        backgroundColor: item.color,
+                        display: "inline-block",
                       }}
-                    >
-                      {BAR_LEGEND.map((item) => (
-                        <div
-                          key={item.name}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                          }}
-                        >
-                          <span
-                            style={{
-                              width: 12,
-                              height: 12,
-                              borderRadius: 2,
-                              backgroundColor: item.color,
-                              display: "inline-block",
-                            }}
-                          />
-                          <span style={{ color: item.color }}>{item.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                />
+                    />
+                    <span style={{ color: item.color }}>{item.name}</span>
+                  </div>
+                ))}
               </div>
             )}
           />
@@ -353,139 +343,90 @@ export default function PaymentModeAnalysis({
             }}
           />
 
-          <Bar dataKey="gateway" fill="#16a34a" name="Gateway">
-            {/* <LabelList
-              dataKey="gateway"
-              position="top"
-              fill="#111827"
-              fontSize={16}
-              fontWeight="700"
-              offset={8}
-              formatter={(value: any) => formatAmount(value)}
-            /> */}
+          {/* All bars share the same stackId so they stack instead of grouping */}
+          <Bar dataKey="gateway" stackId="a" fill="#16a34a" name="Gateway">
             {showLabels && (
               <LabelList
                 dataKey="gateway"
-                position="top"
-                fill="#111827"
-                fontSize={16}
+                position="inside"
+                fill="#0a0a0a"
+                fontSize={12}
                 fontWeight="700"
-                offset={8}
                 formatter={(value: any) =>
-                  formatAmount(value, barData.length === 4)
+                  value > 0 ? formatAmount(value, true) : ""
                 }
               />
             )}
           </Bar>
 
-          <Bar dataKey="cash" fill="#2563eb" name="Cash">
-            {/* <LabelList
-              fill="#111827"
-              fontSize={16}
-              fontWeight="700"
-              dataKey="cash"
-              position="top"
-              offset={8}
-              formatter={(value: any) => formatAmount(value)}
-            /> */}
+          <Bar dataKey="cash" stackId="a" fill="#2563eb" name="Cash">
             {showLabels && (
               <LabelList
                 dataKey="cash"
-                position="top"
-                fill="#111827"
-                fontSize={16}
+                position="inside"
+                fill="#080808"
+                fontSize={12}
                 fontWeight="700"
-                offset={8}
                 formatter={(value: any) =>
-                  formatAmount(value, barData.length === 4)
+                  value > 0 ? formatAmount(value, true) : ""
                 }
               />
             )}
           </Bar>
 
-          <Bar dataKey="card" fill="#f59e0b" name="Card">
-            {/* <LabelList
-              fill="#111827"
-              fontSize={16}
-              fontWeight="700"
-              dataKey="card"
-              position="top"
-              offset={8}
-              formatter={(value: any) => formatAmount(value)}
-            /> */}
+          <Bar dataKey="card" stackId="a" fill="#f59e0b" name="Card">
             {showLabels && (
               <LabelList
                 dataKey="card"
-                position="top"
-                fill="#111827"
-                fontSize={16}
+                position="inside"
+                fill="#060606"
+                fontSize={12}
                 fontWeight="700"
-                offset={8}
                 formatter={(value: any) =>
-                  formatAmount(value, barData.length === 4)
+                  value > 0 ? formatAmount(value, true) : ""
                 }
               />
             )}
           </Bar>
 
-          <Bar dataKey="noCharge" fill="#8b5cf6" name="Others">
-            {/* <LabelList
-              fill="#111827"
-              dataKey="noCharge"
-              position="top"
-              fontSize={16}
-              fontWeight="700"
-              offset={8}
-              formatter={(value: any) => formatAmount(value)}
-            /> */}
+          <Bar dataKey="noCharge" stackId="a" fill="#8b5cf6" name="Others">
             {showLabels && (
               <LabelList
                 dataKey="noCharge"
-                position="top"
-                fill="#8b5cf6"
-                fontSize={16}
+                position="inside"
+                fill="#0a0a0a"
+                fontSize={12}
                 fontWeight="700"
-                offset={8}
                 formatter={(value: any) =>
-                  formatAmount(value, barData.length === 4)
+                  value > 0 ? formatAmount(value, true) : ""
                 }
               />
             )}
           </Bar>
 
-          {/* <Bar dataKey="upi" fill="#06b6d4" name="UPI">
-            <LabelList
-              fill="#111827"
-              dataKey="upi"
-              position="top"
-              fontSize={16}
-              fontWeight="700"
-              offset={8}
-              formatter={(value: any) => formatAmount(value)}
-            />
-          </Bar> */}
-
-          <Bar dataKey="notPaid" fill="#ef4444" name="Not Paid">
-            {/* <LabelList
-              fill="#111827"
-              dataKey="notPaid"
-              position="top"
-              fontSize={16}
-              fontWeight="700"
-              offset={8}
-              formatter={(value: any) => formatAmount(value)}
-            /> */}
+          <Bar dataKey="notPaid" stackId="a" fill="#ef4444" name="Not Paid">
             {showLabels && (
               <LabelList
                 dataKey="notPaid"
+                position="inside"
+                fill="#0a0a0a"
+                fontSize={12}
+                fontWeight="700"
+                formatter={(value: any) =>
+                  value > 0 ? formatAmount(value, true) : ""
+                }
+              />
+            )}
+            {/* Total label on top of the full stacked column */}
+            {showLabels && (
+              <LabelList
+                dataKey="total"
                 position="top"
-                fill="#ef4444"
-                fontSize={16}
+                fill="#111827"
+                fontSize={14}
                 fontWeight="700"
                 offset={8}
-                formatter={(value: any) =>
-                  formatAmount(value, barData.length === 4)
-                }
+                formatter={(value: any) => formatAmount(value)}
               />
             )}
           </Bar>

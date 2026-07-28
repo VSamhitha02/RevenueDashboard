@@ -1,6 +1,7 @@
 "use client";
 import HourlySegmentRevenue from "./HourlySegmentRevenue";
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -39,13 +40,31 @@ const formatChartValue = (value: number) => {
 
 const BAR_COLORS = ["#22c55e", "#f97316", "#3b82f6", "#a855f7", "#ef4444", "#14b8a6"];
 
-export default function ItemSegmentDashboard({ data,selectedSegment }: Props) {
-  //const [selectedSegment, setSelectedSegment] = useState("Food");
+export default function ItemSegmentDashboard({ data }: Props) {
+  const [selectedSegment, setSelectedSegment] = useState("Food");
 
-  const dashboard = getItemSegmentDashboard(data, selectedSegment);
-  const hourlySegmentData = getHourlySegmentRevenue(data);
+const dashboard = getItemSegmentDashboard(data, selectedSegment);
 
-  const { segments, cards, chartData, topItems, orderTypes, orderTypeLabels } = dashboard;
+const {
+  segments,
+  cards,
+  chartData,
+  topItems,
+  orderTypes,
+  orderTypeLabels,
+} = dashboard;
+
+// useEffect(() => {
+//   if (!selectedSegment && segments.length > 0) {
+//     handleSegmentChange(segments[0]);
+//   }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+// }, [segments, selectedSegment]);
+
+ 
+  const hourlySegmentData = getHourlySegmentRevenue(data, selectedSegment);
+
+ 
 console.log(topItems);
   // Calculate overall totals across all table rows
  const tableTotals = topItems.reduce(
@@ -84,7 +103,7 @@ console.log(topItems);
 
         {/* <select
           value={selectedSegment}
-          onChange={(e) => setSelectedSegment(e.target.value)}
+          onChange={(e) => handleSegmentChange(e.target.value)}
           className="border text-black rounded-md px-4 py-2"
         >
           {segments.map((segment: string) => (
@@ -194,11 +213,12 @@ console.log(topItems);
               <tr className="bg-orange-200">
                 <th className="px-3 py-2 text-left text-black">Segment</th>
                 <th className="px-3 py-2 text-left text-black">Item Name</th>
+                   <th className="px-3 py-2 text-right text-black">Quantity</th>
                 <th className="px-3 py-2 text-right text-black">Item Total</th>
                 <th className="px-3 py-2 text-right text-black">Discount</th>
                 <th className="px-3 py-2 text-right text-black">Taxes</th>
                 <th className="px-3 py-2 text-right text-black">Charges</th>
-                <th className="px-3 py-2 text-right text-black">Quantity</th>
+             
                 <th className="px-3 py-2 text-right text-black">Total</th>
               </tr>
             </thead>
@@ -225,6 +245,9 @@ console.log(topItems);
                   >
                     <td className="px-3 py-1.5 leading-tight text-black">{item.segment}</td>
                     <td className="px-3 py-1.5 leading-tight text-black">{item.itemName}</td>
+                      <td className="px-3 py-1.5 leading-tight text-right text-black">
+                      {quantity}
+                    </td>
                     <td className="px-3 py-1.5 leading-tight text-right text-black">
                       {formatCurrency(finalCost)}
                     </td>
@@ -237,9 +260,7 @@ console.log(topItems);
                     <td className="px-3 py-1.5 leading-tight text-right text-black">
                       {formatCurrency(charges)}
                     </td>
-                    <td className="px-3 py-1.5 leading-tight text-right text-black">
-                      {quantity}
-                    </td>
+                  
                     <td className="px-3 py-1.5 leading-tight text-right text-black font-semibold">
                       {formatCurrency(rowTotal)}
                     </td>

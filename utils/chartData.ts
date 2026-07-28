@@ -557,10 +557,12 @@ export function getItemSegmentDashboard(rawData: any, selectedSegment: string) {
 const segments = Array.from(
   new Set(items.map((i: any) => i.segment).filter(Boolean))
 );
-
-const filteredItems = items.filter(
-  (i: any) => i.segment === selectedSegment
-);
+  // const filteredItems =
+  //   selectedSegment === "All" ? items : items.filter((i: any) => i.segment === selectedSegment);
+const filteredItems =
+  !selectedSegment
+    ? items
+    : items.filter((i: any) => i.segment === selectedSegment);
   // ---------------- Cards ----------------
 
   const totalRevenue = filteredItems.reduce((s: number, i: any) => s + i.revenue, 0);
@@ -709,11 +711,45 @@ export function getHourlyRevenueTrend(rawData: any, cutoffHour: number = 5) {
   return hours.map((h) => ({ ...h, average }));
 }
 
-export function getHourlySegmentRevenue(rawData: any, cutoffHour: number = 4) {
+// ---------------------------------------------------------------------------
+// Returns the distinct segment names present across offline + online
+// hour-wise segment revenue rows, so a UI filter dropdown can be populated
+// without hardcoding segment names.
+// ---------------------------------------------------------------------------
+export function getHourlySegmentList(rawData: any): string[] {
   const data = normalizeData(rawData);
 
   const offline = data.offline_segment_revenue_hour_wise ?? [];
   const online = data.online_segment_revenue_hour_wise ?? [];
+
+  const segmentSet = new Set<string>();
+
+  [...offline, ...online].forEach((item: any) => {
+    const segment = item?.segment ?? item?.itemSegment ?? item?.category;
+    if (segment) segmentSet.add(segment);
+  });
+
+  return Array.from(segmentSet);
+}
+
+// selectedSegment: pass "" / "All" (or omit) for no filtering — every
+// segment is included. Pass a specific segment name to restrict the hourly
+// totals to just that segment.
+export function getHourlySegmentRevenue(
+  rawData: any,
+  selectedSegment: string = "",
+  cutoffHour: number = 4
+) {
+  const data = normalizeData(rawData);
+
+  const offline = data.offline_segment_revenue_hour_wise ?? [];
+  const online = data.online_segment_revenue_hour_wise ?? [];
+
+  const matchesSegment = (item: any) => {
+    if (!selectedSegment || selectedSegment === "All") return true;
+    const segment = item?.segment ?? item?.itemSegment ?? item?.category;
+    return segment === selectedSegment;
+  };
 
   const chartData = Array.from({ length: 24 }, (_, i) => {
     const hour = (cutoffHour + i) % 24;
@@ -732,6 +768,8 @@ export function getHourlySegmentRevenue(rawData: any, cutoffHour: number = 4) {
   );
 
   offline.forEach((item: any) => {
+    if (!matchesSegment(item)) return;
+
     const idx = hourIndex.get(Number(item.orderHour));
 
     if (idx !== undefined) {
@@ -740,6 +778,8 @@ export function getHourlySegmentRevenue(rawData: any, cutoffHour: number = 4) {
   });
 
   online.forEach((item: any) => {
+    if (!matchesSegment(item)) return;
+
     const idx = hourIndex.get(Number(item.orderHour));
 
     if (idx !== undefined) {
