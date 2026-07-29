@@ -22,6 +22,7 @@ import {
 type Props = {
   data: any; // RAW response JSON object
   selectedSegment:string
+  cutoffHour: number
 };
 
 const formatCurrency = (value: number) =>
@@ -39,10 +40,24 @@ const formatChartValue = (value: number) => {
 
 const BAR_COLORS = ["#22c55e", "#f97316", "#3b82f6", "#a855f7", "#ef4444", "#14b8a6"];
 
-export default function ItemSegmentDashboard({ data,selectedSegment}: Props) {
+export default function ItemSegmentDashboard({ data,selectedSegment, cutoffHour}: Props) {
   //const [selectedSegment, setSelectedSegment] = useState("");
 
-const dashboard = getItemSegmentDashboard(data, selectedSegment);
+const dashboard = data
+  ? getItemSegmentDashboard(data, selectedSegment)
+  : {
+      segments: [],
+      cards: {
+        totalRevenue: 0,
+        avgRevenuePerDay: 0,
+        totalOrders: 0,
+        avgOrderValue: 0,
+      },
+      chartData: [],
+      topItems: [],
+      orderTypes: [],
+      orderTypeLabels: [],
+    };
 console.log("selectedSegment:", selectedSegment);
 
 
@@ -62,7 +77,13 @@ const {
 // }, [segments, selectedSegment]);
 
  
-  const hourlySegmentData = getHourlySegmentRevenue(data);
+const hourlySegmentData = data
+  ? getHourlySegmentRevenue(
+      data,
+      selectedSegment,
+      cutoffHour
+    )
+  : [];
 
  
 console.log(topItems);
