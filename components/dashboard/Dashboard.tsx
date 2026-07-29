@@ -234,7 +234,8 @@ export default function Dashboard({ fseId, cutoffHour, }: DashboardProps) {
       dateFilterParam,
       customDateParam,
       customStartParam,
-      customEndParam
+      customEndParam,
+      cutoffHour
     );
     fetchData(range);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -259,7 +260,13 @@ export default function Dashboard({ fseId, cutoffHour, }: DashboardProps) {
     if (option === "Custom Date Range" && (!customStart || !customEnd))
       return;
 
-    const range = getDateRange(option, customDate, customStart, customEnd);
+    const range = getDateRange(
+      option,
+      customDate,
+      customStart,
+      customEnd,
+      cutoffHour
+    );
     fetchData(range);
   }
 

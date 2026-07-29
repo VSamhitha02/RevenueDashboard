@@ -228,10 +228,17 @@ export default function Segment({ fseId, selectedSegment, cutoffHour, }: Dashboa
       customDateParam,
       customStartParam,
       customEndParam,
+      cutoffHour,
     );
     fetchData(range);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [
+    cutoffHour,
+    dateFilterParam,
+    customDateParam,
+    customStartParam,
+    customEndParam,
+  ]);
 
   function handleDateSelect(
     option: DateFilterOption,
@@ -244,7 +251,13 @@ export default function Segment({ fseId, selectedSegment, cutoffHour, }: Dashboa
     if (option === "Custom Date" && !customDate) return;
     if (option === "Custom Date Range" && (!customStart || !customEnd)) return;
 
-    const range = getDateRange(option, customDate, customStart, customEnd);
+    const range = getDateRange(
+      option,
+      customDate,
+      customStart,
+      customEnd,
+      cutoffHour,
+    );
     fetchData(range);
   }
 
