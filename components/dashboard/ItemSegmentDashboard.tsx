@@ -30,11 +30,17 @@ const formatCurrency = (value: number) =>
 
 const formatChartValue = (value: number) => {
   if (value >= 10000000) {
-    return `₹${Math.round(value / 10000000)}Cr`;
+    return `₹${(value / 10000000).toFixed(value >= 100000000 ? 0 : 1)}Cr`;
   }
+
   if (value >= 100000) {
-    return `₹${Math.round(value / 100000)}L`;
+    return `₹${(value / 100000).toFixed(value >= 1000000 ? 0 : 1)}L`;
   }
+
+  if (value >= 1000) {
+    return `₹${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}K`;
+  }
+
   return `₹${Number(value).toLocaleString("en-IN")}`;
 };
 
@@ -116,6 +122,24 @@ console.log(topItems);
     grandTotal: 0,
   }
 );
+
+  // Desktop (>=1024px) keeps the chart at 100% width, same as before.
+  // Below that, force a minimum width so bars get real breathing room
+  // and the chart becomes horizontally scrollable instead of squeezing
+  // everything into a too-narrow screen.
+  const [viewportWide, setViewportWide] = useState(false);
+
+  useEffect(() => {
+    const updateViewport = () => setViewportWide(window.innerWidth >= 1024);
+    updateViewport();
+    window.addEventListener("resize", updateViewport);
+    return () => window.removeEventListener("resize", updateViewport);
+  }, []);
+
+  const chartMinWidthPx = viewportWide
+    ? undefined
+    : Math.max(chartData.length * 110, 700);
+
   return (
     <div className="space-y-8">
       {/* ---------------- Filter ---------------- */}
@@ -164,59 +188,72 @@ console.log(topItems);
           Order Type Wise Revenue
         </h3>
 
-        <ResponsiveContainer width="100%" height={420}>
-          <ComposedChart
-            data={chartData}
-            margin={{ top: 40, right: 20, left: 20, bottom: 20 }}
+        <div className="w-full overflow-x-auto">
+          <div
+            style={{
+              minWidth: chartMinWidthPx ? `${chartMinWidthPx}px` : "100%",
+            }}
           >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" tick={{ fill: "#000000" }} />
-            <YAxis
-              tickFormatter={(v) => `₹${v.toLocaleString("en-IN")}`}
-              tick={{ fill: "#000000" }}
-            />
-            <Tooltip
-              labelStyle={{ color: "#000", fontWeight: 600 }}
-              itemStyle={{ color: "#000" }}
-              formatter={(value: any) => formatCurrency(Number(value))}
-            />
-            <Legend wrapperStyle={{ color: "#000000" }} />
-
-            <ReferenceLine
-              y={cards.avgRevenuePerDay}
-              stroke="#3b82f6"
-              strokeDasharray="4 4"
-              label={{
-                value: `Avg: ₹${Number(cards.avgRevenuePerDay).toLocaleString("en-IN")}`,
-                position: "insideTopRight",
-                fill: "#3b82f6",
-                fontSize: 14,
-                fontWeight: 700,
-                dy: -6,
-              }}
-            />
-            {orderTypes.map((type: string, idx: number) => (
-              <Bar
-                key={type}
-                dataKey={type}
-                name={orderTypeLabels[idx]}
-                fill={BAR_COLORS[idx % BAR_COLORS.length]}
-                radius={[4, 4, 0, 0]}
+            <ResponsiveContainer width="100%" height={420}>
+              <ComposedChart
+                data={chartData}
+                margin={{ top: 40, right: 20, left: 20, bottom: 20 }}
               >
-                <LabelList
-                  dataKey={type}
-                  position="top"
-                  fill="#000000"
-                  fontSize={13}
-                  fontWeight="700"
-                  formatter={(value: any) =>
-                    value > 0 ? formatChartValue(Number(value)) : ""
-                  }
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" tick={{ fill: "#000000" }} />
+<YAxis
+  tickFormatter={(v) => formatChartValue(Number(v))}
+  tick={{ fill: "#000000" }}
+/>
+                <Tooltip
+                  labelStyle={{ color: "#000", fontWeight: 600 }}
+                  itemStyle={{ color: "#000" }}
+                  formatter={(value: any) => formatChartValue(Number(value))}
                 />
-              </Bar>
-            ))}
-          </ComposedChart>
-        </ResponsiveContainer>
+                <Legend wrapperStyle={{ color: "#000000" }} />
+
+                <ReferenceLine
+                  y={cards.avgRevenuePerDay}
+                  stroke="#3b82f6"
+                  strokeDasharray="4 4"
+                  label={{
+                    value: `Avg: ${formatChartValue(cards.avgRevenuePerDay)}`,
+                    position: "insideTopRight",
+                    fill: "#3b82f6",
+                    fontSize: 14,
+                    fontWeight: 700,
+                    dy: -10,
+                  }}
+                />
+                {orderTypes.map((type: string, idx: number) => (
+                  <Bar
+                    key={type}
+                    dataKey={type}
+                    stackId="a"
+                    name={orderTypeLabels[idx]}
+                    fill={BAR_COLORS[idx % BAR_COLORS.length]}
+                    radius={[4, 4, 0, 0]}
+                  >
+                    {/* Stacked segments sit at varying heights, so each
+                        value is centered within its own slice instead of
+                        "top" (which would land at the segment boundary
+                        and clash with the segment stacked above it). */}
+                    <LabelList
+                      dataKey={type}
+                      position="center"
+                      fill="#000000"
+                      fontSize={13}
+                      fontWeight="700"
+                      formatter={(value: any) =>
+                        value > 0 ? formatChartValue(Number(value)) : ""
+                      }
+                    />
+                  </Bar>
+                ))}
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
 
       {/* ---------------- Hourly Revenue ---------------- */}
