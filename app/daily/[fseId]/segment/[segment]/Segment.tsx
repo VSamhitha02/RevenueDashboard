@@ -173,9 +173,10 @@ import DateFilter from "@/components/dashboard/DateFilter";
 interface DashboardProps {
   fseId: string;
   selectedSegment: string;
+  cutoffHour: number;
 }
 
-export default function Segment({ fseId, selectedSegment }: DashboardProps) {
+export default function Segment({ fseId, selectedSegment, cutoffHour, }: DashboardProps) {
   const searchParams = useSearchParams();
 
   const dateFilterParam =
@@ -192,6 +193,7 @@ export default function Segment({ fseId, selectedSegment }: DashboardProps) {
   const [selectedRange, setSelectedRange] = useState("1D");
 
   async function fetchData(range: { startDate: string; endDate: string }) {
+    
     try {
       setLoading(true);
       const response = await getRevenueDashboard({
@@ -199,8 +201,9 @@ export default function Segment({ fseId, selectedSegment }: DashboardProps) {
         startDate: range.startDate,
         endDate: range.endDate,
         orderTypes: [],
-        cutoffHour: 4,
+        cutoffHour
       });
+      console.log("API Response:", response);
 
       setData(response);
     } catch (err) {
@@ -225,10 +228,17 @@ export default function Segment({ fseId, selectedSegment }: DashboardProps) {
       customDateParam,
       customStartParam,
       customEndParam,
+      cutoffHour,
     );
     fetchData(range);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [
+    cutoffHour,
+    dateFilterParam,
+    customDateParam,
+    customStartParam,
+    customEndParam,
+  ]);
 
   function handleDateSelect(
     option: DateFilterOption,
@@ -241,7 +251,13 @@ export default function Segment({ fseId, selectedSegment }: DashboardProps) {
     if (option === "Custom Date" && !customDate) return;
     if (option === "Custom Date Range" && (!customStart || !customEnd)) return;
 
-    const range = getDateRange(option, customDate, customStart, customEnd);
+    const range = getDateRange(
+      option,
+      customDate,
+      customStart,
+      customEnd,
+      cutoffHour,
+    );
     fetchData(range);
   }
 
@@ -272,7 +288,7 @@ export default function Segment({ fseId, selectedSegment }: DashboardProps) {
         <DateFilter selected={dateOption} onSelect={handleDateSelect} />
 
         <div className="mt-8">
-          <ItemSegmentDashboard data={data} selectedSegment={selectedSegment} />
+          <ItemSegmentDashboard data={data} selectedSegment={selectedSegment} cutoffHour={cutoffHour} />
         </div>
       </div>
     </main>

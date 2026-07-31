@@ -8,13 +8,9 @@ export type DateFilterOption =
   | "Custom Date"
   | "Custom Date Range";
 
-function formatForApi(date: Date, endOfDay = false) {
+function formatForApi(date: Date, cutoffHour: number) {
   const d = new Date(date);
-  if (endOfDay) {
-    d.setHours(23, 59, 59, 999);
-  } else {
-    d.setHours(4, 0, 0, 0); // matches your cutoffHour: 4
-  }
+  d.setHours(cutoffHour, 0, 0, 0);
 
   const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -27,7 +23,8 @@ export function getDateRange(
   option: DateFilterOption,
   customDate?: string,
   customStart?: string,
-  customEnd?: string
+  customEnd?: string,
+  cutoffHour: number = 4
 ): { startDate: string; endDate: string } {
   const now = new Date();
 
@@ -37,8 +34,8 @@ export function getDateRange(
       const end = new Date(now);
       end.setDate(end.getDate() + 1);
       return {
-        startDate: formatForApi(start),
-        endDate: formatForApi(end),
+        startDate: formatForApi(start, cutoffHour),
+        endDate: formatForApi(end, cutoffHour),
       };
     }
 
@@ -47,8 +44,8 @@ export function getDateRange(
       start.setDate(start.getDate() - 1);
       const end = new Date(now);
       return {
-        startDate: formatForApi(start),
-        endDate: formatForApi(end),
+        startDate: formatForApi(start, cutoffHour),
+        endDate: formatForApi(end, cutoffHour),
       };
     }
 
@@ -60,8 +57,8 @@ export function getDateRange(
       const end = new Date(now);
       end.setDate(end.getDate() + 1);
       return {
-        startDate: formatForApi(start),
-        endDate: formatForApi(end),
+        startDate: formatForApi(start, cutoffHour),
+        endDate: formatForApi(end, cutoffHour),
       };
     }
 
@@ -73,8 +70,8 @@ export function getDateRange(
       const end = new Date(start);
       end.setDate(end.getDate() + 7);
       return {
-        startDate: formatForApi(start),
-        endDate: formatForApi(end),
+        startDate: formatForApi(start, cutoffHour),
+        endDate: formatForApi(end, cutoffHour),
       };
     }
 
@@ -83,8 +80,8 @@ export function getDateRange(
       const end = new Date(now);
       end.setDate(end.getDate() + 1);
       return {
-        startDate: formatForApi(start),
-        endDate: formatForApi(end),
+        startDate: formatForApi(start, cutoffHour),
+        endDate: formatForApi(end, cutoffHour),
       };
     }
 
@@ -92,34 +89,34 @@ export function getDateRange(
       const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const end = new Date(now.getFullYear(), now.getMonth(), 1);
       return {
-        startDate: formatForApi(start),
-        endDate: formatForApi(end),
+        startDate: formatForApi(start, cutoffHour),
+        endDate: formatForApi(end, cutoffHour),
       };
     }
 
     case "Custom Date": {
-      if (!customDate) return getDateRange("Today");
+      if (!customDate) return getDateRange("Today", undefined, undefined, undefined, cutoffHour);
       const start = new Date(customDate);
       const end = new Date(customDate);
       end.setDate(end.getDate() + 1);
       return {
-        startDate: formatForApi(start),
-        endDate: formatForApi(end),
+        startDate: formatForApi(start, cutoffHour),
+        endDate: formatForApi(end, cutoffHour),
       };
     }
 
     case "Custom Date Range": {
-      if (!customStart || !customEnd) return getDateRange("Today");
+      if (!customStart || !customEnd) return getDateRange("Today", undefined, undefined, undefined, cutoffHour);
       const start = new Date(customStart);
       const end = new Date(customEnd);
       end.setDate(end.getDate() + 1);
       return {
-        startDate: formatForApi(start),
-        endDate: formatForApi(end),
+        startDate: formatForApi(start, cutoffHour),
+        endDate: formatForApi(end, cutoffHour),
       };
     }
 
     default:
-      return getDateRange("Today");
+      return getDateRange("Today", undefined, undefined, undefined, cutoffHour);
   }
 }

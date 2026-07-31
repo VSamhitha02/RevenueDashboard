@@ -5,17 +5,23 @@ interface PageProps {
     fseId: string;
     segment: string;
   }>;
+  searchParams: Promise<{
+    cutoffHour?: string;
+  }>;
 }
 
-export default async function Page({ params }: PageProps) {
+export default async function Page({
+  params,
+  searchParams,
+}: PageProps) {
   const { fseId, segment } = await params;
-
-  console.log({ fseId, segment });
+  const { cutoffHour = "04" } = await searchParams;
 
   return (
     <Segment
       fseId={fseId}
-      selectedSegment={encodeURIComponent(segment)}
+      selectedSegment={(segment)}
+      cutoffHour={Number(cutoffHour)}
     />
   );
 }

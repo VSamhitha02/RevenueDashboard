@@ -183,9 +183,10 @@ import ItemSegment from "./ItemSegment";
 
 interface DashboardProps {
   fseId: string;
+  cutoffHour: number;
 }
 
-export default function Dashboard({ fseId }: DashboardProps) {
+export default function Dashboard({ fseId, cutoffHour, }: DashboardProps) {
   const searchParams = useSearchParams();
 
   const dateFilterParam =
@@ -209,7 +210,7 @@ export default function Dashboard({ fseId }: DashboardProps) {
         startDate: range.startDate,
         endDate: range.endDate,
         orderTypes: [],
-        cutoffHour: 4,
+        cutoffHour,
       });
 
       setData(response);
@@ -234,11 +235,18 @@ export default function Dashboard({ fseId }: DashboardProps) {
       dateFilterParam,
       customDateParam,
       customStartParam,
-      customEndParam
+      customEndParam,
+      cutoffHour
     );
     fetchData(range);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [
+      cutoffHour,
+  dateFilterParam,
+  customDateParam,
+  customStartParam,
+  customEndParam,
+  ]);
   
 
   function handleDateSelect(
@@ -253,7 +261,13 @@ export default function Dashboard({ fseId }: DashboardProps) {
     if (option === "Custom Date Range" && (!customStart || !customEnd))
       return;
 
-    const range = getDateRange(option, customDate, customStart, customEnd);
+    const range = getDateRange(
+      option,
+      customDate,
+      customStart,
+      customEnd,
+      cutoffHour
+    );
     fetchData(range);
   }
 
@@ -263,14 +277,14 @@ export default function Dashboard({ fseId }: DashboardProps) {
   //   return <div className="p-10">No data found</div>;
   // }
 
-  const hourlyRevenue = getHourlyRevenueTrend(data);
+  const hourlyRevenue = getHourlyRevenueTrend(data, cutoffHour);
 
   // Generate all chart data AFTER data is available
   const summary = getSummaryData(data);
   const revenueTrend = getRevenueTrend(data);
   const paymentMode = getPaymentModeAnalysis(data);
   const orderTypeRevenue = getOrderTypeRevenueAnalysis(data);
-  const chartData = getHourlySegmentRevenue(data);
+  const chartData = getHourlySegmentRevenue(data, "", cutoffHour);
   return (
     <main className="min-h-screen bg-slate-100">
       <div className="max-w-7xl mx-auto px-8 py-8">

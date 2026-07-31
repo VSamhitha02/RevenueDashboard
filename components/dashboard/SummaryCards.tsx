@@ -139,6 +139,7 @@ type SummaryCardsProps = {
     offlineNotPaid: number;
     offlineCredit: number;
     offlineNoCharge: number;
+    offlineReceived: number; // <-- already computed correctly upstream
   };
 };
 
@@ -147,7 +148,7 @@ export default function SummaryCards({ summary }: SummaryCardsProps) {
   // state (it settles instantly), so the whole of onlineRevenue counts as
   // received. Total Received now reflects offline + online together.
   const offlineReceived =
-    summary.offlineRevenue - summary.offlineNotPaid - summary.offlineCredit;
+    summary.offlineRevenue - summary.offlineNotPaid - summary.offlineCredit -  summary.offlineNoCharge;
   const onlineReceived = summary.onlineRevenue;
   const totalReceived = offlineReceived + onlineReceived;
 
