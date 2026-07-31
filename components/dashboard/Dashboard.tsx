@@ -179,6 +179,7 @@ import {
   getHourlySegmentRevenue,
 } from "@/utils/chartData";
 import { useSearchParams } from "next/navigation";
+import ItemSegment from "./ItemSegment";
 
 interface DashboardProps {
   fseId: string;
@@ -327,11 +328,11 @@ export default function Dashboard({ fseId }: DashboardProps) {
           />
         </div>
 
-        {/* <div className="mt-8">
+        <div className="mt-8">
 
-          <ItemSegmentDashboard data={data} />
+          <ItemSegment data={data} />
 
-        </div> */}
+        </div>
       </div>
     </main>
   );
