@@ -1008,3 +1008,40 @@ export function getHourlySegmentRevenue(
 
   return chartData;
 }
+
+// ---------------------------------------------------------------------------
+// Groups ALL items (offline + online) by their segment — not filtered to a
+// single selected segment — and sums finalCost per segment. Used to drive a
+// segment-level pie chart (top 5 segments by finalCost + a table of the rest).
+//
+// Grouped by parentSegmentId/segmentId when present (stable, unique key even
+// if two segments share a display name), but the value shown to the user is
+// always the readable `segment` name — never the raw id.
+// ---------------------------------------------------------------------------
+export function getSegmentWiseRevenue(rawData: any) {
+  const data = getItemSegmentAnalysis(rawData);
+  const items = [...(data.offlineItems ?? []), ...(data.onlineItems ?? [])];
+
+  const getSegmentKey = (item: any) =>
+    item.parentSegmentId ?? item.segmentId ?? item.segment;
+
+  const segmentMap: Record<string, { segment: string; finalCost: number }> = {};
+
+  items.forEach((i: any) => {
+    const key = getSegmentKey(i);
+    if (!key) return;
+
+    if (!segmentMap[key]) {
+      segmentMap[key] = {
+        // Readable name for display — falls back to the key only if no
+        // human-readable segment name exists at all.
+        segment: i.segment ?? key,
+        finalCost: 0,
+      };
+    }
+
+    segmentMap[key].finalCost += Number(i.finalCost ?? 0);
+  });
+
+  return Object.values(segmentMap).sort((a, b) => b.finalCost - a.finalCost);
+}
