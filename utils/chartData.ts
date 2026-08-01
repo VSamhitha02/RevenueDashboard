@@ -260,6 +260,7 @@ export function getOverallAnalysis(rawData: any) {
     0
   );
 
+  
   return [
     { name: "Offline", value: offlineRevenue },
     { name: "Online", value: onlineRevenue },
