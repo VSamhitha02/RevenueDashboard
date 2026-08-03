@@ -147,7 +147,7 @@ export default function OrderTypeRevenueAnalysis({
                             fontSize: 13,
                           }}
                         >
-                          {entry.name}: {formatAmount(Number(entry.value))}
+                         {entry.name}: {formatAmount(Number(entry.value), false)}
                         </div>
                       ))}
                       <div
@@ -160,7 +160,7 @@ export default function OrderTypeRevenueAnalysis({
                           fontSize: 13,
                         }}
                       >
-                        Total: {formatAmount(Number(total))}
+                        Total: {formatAmount(Number(total), false)}
                       </div>
                     </div>
                   );

@@ -23,6 +23,7 @@ type Props = {
   data: any; // RAW response JSON object
   selectedSegment:string
   cutoffHour: number
+  fseId: string
 };
 
 const formatCurrency = (value: number) =>
@@ -46,7 +47,7 @@ const formatChartValue = (value: number) => {
 
 const BAR_COLORS = ["#22c55e", "#f97316", "#3b82f6", "#a855f7", "#ef4444", "#14b8a6"];
 
-export default function ItemSegmentDashboard({ data,selectedSegment, cutoffHour}: Props) {
+export default function ItemSegmentDashboard({ data,selectedSegment, cutoffHour, fseId }: Props) {
   //const [selectedSegment, setSelectedSegment] = useState("");
 
 const dashboard = data

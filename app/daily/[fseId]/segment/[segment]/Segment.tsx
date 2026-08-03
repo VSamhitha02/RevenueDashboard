@@ -288,7 +288,7 @@ export default function Segment({ fseId, selectedSegment, cutoffHour, }: Dashboa
         <DateFilter selected={dateOption} onSelect={handleDateSelect} />
 
         <div className="mt-8">
-          <ItemSegmentDashboard data={data} selectedSegment={selectedSegment} cutoffHour={cutoffHour} />
+          <ItemSegmentDashboard data={data} selectedSegment={selectedSegment} cutoffHour={cutoffHour} fseId={fseId} />
         </div>
       </div>
     </main>

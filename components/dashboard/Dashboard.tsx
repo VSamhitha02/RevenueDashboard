@@ -186,7 +186,7 @@ export default function Dashboard({ fseId, cutoffHour, }: DashboardProps) {
           />
         </div>
                 <div className="mt-8">
-          <SegmentwiseRevenue data={data} />
+          <SegmentwiseRevenue data={data} fseId={fseId} cutoffHour={cutoffHour}  />
         </div>
 
         <div className="mt-8">

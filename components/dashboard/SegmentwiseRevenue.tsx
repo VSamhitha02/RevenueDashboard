@@ -9,9 +9,12 @@ import {
 } from "recharts";
 
 import { getSegmentWiseRevenue } from "@/utils/chartData";
+import Link from "next/link";
 
 type Props = {
   data: any; // RAW response JSON object
+  fseId: string;
+  cutoffHour: number;
 };
 
 const formatCurrency = (value: number) =>
@@ -32,6 +35,16 @@ const formatChartValue = (value: number) => {
 
   return `₹${Number(value).toLocaleString("en-IN")}`;
 };
+
+// Converts "Beverages", "Health & Hygiene", etc. into a URL-safe slug
+// e.g. "Health & Hygiene" -> "health-hygiene"
+const toSlug = (str: string) =>
+  String(str)
+    .toLowerCase()
+    .trim()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
 const PIE_COLORS = ["#22c55e", "#f97316", "#3b82f6", "#a855f7", "#ef4444"];
 
@@ -83,7 +96,11 @@ const CustomPieTooltip = ({ active, payload }: any) => {
   );
 };
 
-export default function SegmentwiseRevenue({ data }: Props) {
+export default function SegmentwiseRevenue({
+  data,
+  fseId,
+  cutoffHour,
+}: Props) {
   // ---------------- Segment-wise totals (all segments, by finalCost) ----------------
   const segmentRevenue = data ? getSegmentWiseRevenue(data) : [];
 
@@ -96,10 +113,15 @@ export default function SegmentwiseRevenue({ data }: Props) {
       value: Number(s.finalCost ?? 0),
     })),
     ...(remainingSegments.length > 0
-      ? [{ name: "Others", value: remainingSegments.reduce(
-          (sum: number, s: any) => sum + Number(s.finalCost ?? 0),
-          0
-        ) }]
+      ? [
+          {
+            name: "Others",
+            value: remainingSegments.reduce(
+              (sum: number, s: any) => sum + Number(s.finalCost ?? 0),
+              0
+            ),
+          },
+        ]
       : []),
   ];
 
@@ -108,57 +130,62 @@ export default function SegmentwiseRevenue({ data }: Props) {
     0
   );
 
+  const totalFinalCost = segmentRevenue.reduce(
+    (sum: number, s: any) => sum + Number(s.finalCost ?? 0),
+    0
+  );
+
   return (
     <div className="bg-yellow-100 rounded-xl shadow p-5">
       <h3 className="text-2xl text-black font-bold mb-4 text-left">
-        Segment Wise Revenue 
+        Segment Wise Revenue
       </h3>
 
       <div className="flex flex-col lg:flex-row gap-6 items-stretch">
         {/* Pie chart */}
         <div className="w-full lg:w-1/2 min-w-0" style={{ minHeight: 380 }}>
           {pieData.length > 0 ? (
-<ResponsiveContainer width="100%" height={440} minWidth={280}>
-  <PieChart
-    margin={{
-      top: 40,
-      right: 30,
-      bottom: 35,
-      left: 30,
-    }}
-  >
-    <Pie
-      data={pieData}
-      dataKey="value"
-      nameKey="name"
-      cx="50%"
-      cy="52%"          // Move chart a little down
-      outerRadius={105}
-      label={(entry: any) => formatChartValue(Number(entry.value))}
-    >
-      {pieData.map((entry: any, idx: number) => (
-        <Cell
-          key={idx}
-          fill={
-            entry.name === "Others"
-              ? "#9ca3af"
-              : PIE_COLORS[idx % PIE_COLORS.length]
-          }
-        />
-      ))}
-    </Pie>
+            <ResponsiveContainer width="100%" height={440} minWidth={280}>
+              <PieChart
+                margin={{
+                  top: 40,
+                  right: 30,
+                  bottom: 35,
+                  left: 30,
+                }}
+              >
+                <Pie
+                  data={pieData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="52%" // Move chart a little down
+                  outerRadius={105}
+                  label={(entry: any) => formatChartValue(Number(entry.value))}
+                >
+                  {pieData.map((entry: any, idx: number) => (
+                    <Cell
+                      key={idx}
+                      fill={
+                        entry.name === "Others"
+                          ? "#9ca3af"
+                          : PIE_COLORS[idx % PIE_COLORS.length]
+                      }
+                    />
+                  ))}
+                </Pie>
 
-<Tooltip content={<CustomPieTooltip />} />
+                <Tooltip content={<CustomPieTooltip />} />
 
-    <Legend
-      verticalAlign="bottom"
-      align="center"
-      wrapperStyle={{
-        paddingTop: "20px",   // Space between pie and legend
-      }}
-    />
-  </PieChart>
-</ResponsiveContainer>
+                <Legend
+                  verticalAlign="bottom"
+                  align="center"
+                  wrapperStyle={{
+                    paddingTop: "20px", // Space between pie and legend
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
           ) : (
             <div className="flex items-center justify-center h-[380px] text-black text-sm">
               No segment data available to chart.
@@ -189,9 +216,16 @@ export default function SegmentwiseRevenue({ data }: Props) {
 
                   {remainingSegments.map((s: any, index: number) => (
                     <tr key={index} className="border-b border-gray-100">
-                      <td className="px-3 py-1.5 pl-8 leading-tight text-gray-500">
-                        <span className="mr-1">↳</span>
-                        {s.segment}
+                      <td className="px-3 py-1.5 pl-8 leading-tight">
+                        <span className="mr-1 text-gray-500">↳</span>
+                        <Link
+                          href={`/daily/${fseId}/segment/${toSlug(
+                            s.segment
+                          )}?cutoffHour=${cutoffHour}`}
+                          className="text-blue-600 hover:underline"
+                        >
+                          {s.segment}
+                        </Link>
                       </td>
                       <td className="px-3 py-1.5 leading-tight text-right text-gray-500">
                         {formatCurrency(Number(s.finalCost ?? 0))}
@@ -203,6 +237,74 @@ export default function SegmentwiseRevenue({ data }: Props) {
                 <tr>
                   <td colSpan={2} className="px-3 py-3 text-center text-black text-sm">
                     No remaining segments — all segments are in the top 5.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ---------------- All Segments Table (classic styling, like Item Wise Revenue Details) ---------------- */}
+      <div className="bg-indigo-100 rounded-xl shadow p-5 mt-6">
+        <h3 className="text-xl text-black font-semibold mb-4 text-center">
+          Segment Wise Revenue Details
+        </h3>
+
+        <div className="overflow-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="bg-orange-200">
+                <th className="px-3 py-2 text-center text-black">S. No.</th>
+                <th className="px-3 py-2 text-left text-black">Segment</th>
+                <th className="px-3 py-2 text-right text-black">Final Cost</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {segmentRevenue.map((s: any, index: number) => (
+                <tr
+                  key={index}
+                  className={
+                    index % 2 === 0
+                      ? "bg-blue-100 border-b border-blue-200"
+                      : "bg-blue-300 border-b border-blue-200"
+                  }
+                >
+                  <td className="px-3 py-1.5 leading-tight text-center text-black">
+                    {index + 1}
+                  </td>
+                  <td className="px-3 py-1.5 leading-tight text-black">
+                    <Link
+                      href={`/daily/${fseId}/segment/${toSlug(
+                        s.segment
+                      )}?cutoffHour=${cutoffHour}`}
+                      className="text-black hover:underline"
+                    >
+                      {s.segment}
+                    </Link>
+                  </td>
+                  <td className="px-3 py-1.5 leading-tight text-right text-black font-semibold">
+                    {formatCurrency(Number(s.finalCost ?? 0))}
+                  </td>
+                </tr>
+              ))}
+
+              {segmentRevenue.length === 0 && (
+                <tr>
+                  <td colSpan={3} className="px-3 py-3 text-center text-black text-sm">
+                    No segment data available.
+                  </td>
+                </tr>
+              )}
+
+              {segmentRevenue.length > 0 && (
+                <tr className="font-bold text-black bg-yellow-200">
+                  <td className="px-3 py-2 text-black leading-tight" colSpan={2}>
+                    Total
+                  </td>
+                  <td className="px-3 py-2 text-right text-black leading-tight">
+                    {formatCurrency(totalFinalCost)}
                   </td>
                 </tr>
               )}

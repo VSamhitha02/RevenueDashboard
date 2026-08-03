@@ -144,21 +144,23 @@ export default function ItemSegment({ data,  cutoffHour }: Props) {
     return (
         <div className="space-y-8">
             {/* ---------------- Filter ---------------- */}
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl text-black font-bold">Segment Report</h2>
+<div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
+  <h2 className="text-xl sm:text-2xl font-bold text-black">
+    Segment Report
+  </h2>
 
-                <select
-          value={selectedSegment}
-          onChange={(e) => setSelectedSegment(e.target.value)}
-          className="border text-black rounded-md px-4 py-2"
-        >
-          {segments.map((segment: string) => (
-            <option key={segment} value={segment}>
-              {segment}
-            </option>
-          ))}
-        </select>  
-            </div>
+  <select
+    value={selectedSegment}
+    onChange={(e) => setSelectedSegment(e.target.value)}
+    className="w-full sm:w-72 border rounded-md px-3 py-2 text-black bg-white"
+  >
+    {segments.map((segment: string) => (
+      <option key={segment} value={segment}>
+        {segment}
+      </option>
+    ))}
+  </select>
+</div>
 
             {/* ---------------- Cards ---------------- */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -206,11 +208,16 @@ export default function ItemSegment({ data,  cutoffHour }: Props) {
                                     tickFormatter={(v) => formatChartValue(Number(v))}
                                     tick={{ fill: "#000000" }}
                                 />
-                                <Tooltip
-                                    labelStyle={{ color: "#000", fontWeight: 600 }}
-                                    itemStyle={{ color: "#000" }}
-                                    formatter={(value: any) => formatChartValue(Number(value))}
-                                />
+<Tooltip
+  labelStyle={{ color: "#000", fontWeight: 600 }}
+  itemStyle={{ color: "#000" }}
+  formatter={(value: any) =>
+    `₹${Number(value).toLocaleString("en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`
+  }
+/>
                                 <Legend wrapperStyle={{ color: "#000000" }} />
 
                                 <ReferenceLine
