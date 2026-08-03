@@ -246,42 +246,62 @@ export default function SegmentwiseRevenue({
 
         <div className="overflow-auto">
           <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="bg-orange-200">
-                <th className="px-3 py-2 text-center text-black">S. No.</th>
-                <th className="px-3 py-2 text-left text-black">Segment</th>
-                <th className="px-3 py-2 text-right text-black">Final Cost</th>
-              </tr>
-            </thead>
+    <thead>
+      <tr className="bg-orange-200">
+        <th className="px-3 py-2 text-center text-black">S. No.</th>
+        <th className="px-3 py-2 text-left text-black">Segment</th>
+        <th className="px-3 py-2 text-right text-black">Quantity</th>
+        <th className="px-3 py-2 text-right text-black">Item Total</th>
+        <th className="px-3 py-2 text-right text-black">Discount</th>
+        <th className="px-3 py-2 text-right text-black">Taxes</th>
+        <th className="px-3 py-2 text-right text-black">Charges</th>
+        <th className="px-3 py-2 text-right text-black">Total Revenue</th>
+      </tr>
+    </thead>
 
-            <tbody>
-              {segmentRevenue.map((s: any, index: number) => (
-                <tr
-                  key={index}
-                  className={
-                    index % 2 === 0
-                      ? "bg-blue-100 border-b border-blue-200"
-                      : "bg-blue-300 border-b border-blue-200"
-                  }
-                >
-                  <td className="px-3 py-1.5 leading-tight text-center text-black">
-                    {index + 1}
-                  </td>
-                  <td className="px-3 py-1.5 leading-tight text-black">
-                    <Link
-                      href={`/daily/${fseId}/segment/${toSlug(
-                        s.segment
-                      )}?cutoffHour=${cutoffHour}`}
-                      className="text-black hover:underline"
-                    >
-                      {s.segment}
-                    </Link>
-                  </td>
-                  <td className="px-3 py-1.5 leading-tight text-right text-black font-semibold">
-                    {formatCurrency(Number(s.finalCost ?? 0))}
-                  </td>
-                </tr>
-              ))}
+    <tbody>
+      {segmentRevenue.map((s: any, index: number) => (
+        <tr
+          key={index}
+          className={
+            index % 2 === 0
+              ? "bg-blue-100 border-b border-blue-200"
+              : "bg-blue-300 border-b border-blue-200"
+          }
+        >
+          <td className="px-3 py-1.5 leading-tight text-center text-black">
+            {index + 1}
+          </td>
+          <td className="px-3 py-1.5 leading-tight text-black">
+            <Link
+              href={`/daily/${fseId}/segment/${toSlug(
+                s.segment
+              )}?cutoffHour=${cutoffHour}`}
+              className="text-blue-600 hover:underline"
+            >
+              {s.segment}
+            </Link>
+          </td>
+          <td className="px-3 py-1.5 leading-tight text-right text-black">
+            {Number(s.quantity ?? 0).toLocaleString("en-IN")}
+          </td>
+          <td className="px-3 py-1.5 leading-tight text-right text-black">
+            {formatCurrency(Number(s.itemTotal ?? 0))}
+          </td>
+          <td className="px-3 py-1.5 leading-tight text-right text-black">
+            {formatCurrency(Number(s.discount ?? 0))}
+          </td>
+          <td className="px-3 py-1.5 leading-tight text-right text-black">
+            {formatCurrency(Number(s.taxes ?? 0))}
+          </td>
+          <td className="px-3 py-1.5 leading-tight text-right text-black">
+            {formatCurrency(Number(s.charges ?? 0))}
+          </td>
+          <td className="px-3 py-1.5 leading-tight text-right text-black font-semibold">
+            {formatCurrency(Number(s.finalCost ?? 0))}
+          </td>
+        </tr>
+      ))}
 
               {segmentRevenue.length === 0 && (
                 <tr>
