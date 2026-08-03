@@ -37,7 +37,7 @@ const formatChartValue = (value: number) => {
 };
 
 // Converts "Beverages", "Health & Hygiene", etc. into a URL-safe slug
-// e.g. "Health & Hygiene" -> "health-hygiene"
+// e.g. "Health & Hygiene" -> "health-and-hygiene"
 const toSlug = (str: string) =>
   String(str)
     .toLowerCase()
@@ -193,7 +193,7 @@ export default function SegmentwiseRevenue({
           )}
         </div>
 
-        {/* Remaining segments table */}
+        {/* Remaining segments table (no links here) */}
         <div className="w-full lg:w-1/2 min-w-0 overflow-auto bg-white rounded-xl border border-gray-100 p-5">
           <table className="w-full text-sm border-collapse">
             <thead>
@@ -216,16 +216,9 @@ export default function SegmentwiseRevenue({
 
                   {remainingSegments.map((s: any, index: number) => (
                     <tr key={index} className="border-b border-gray-100">
-                      <td className="px-3 py-1.5 pl-8 leading-tight">
-                        <span className="mr-1 text-gray-500">↳</span>
-                        <Link
-                          href={`/daily/${fseId}/segment/${toSlug(
-                            s.segment
-                          )}?cutoffHour=${cutoffHour}`}
-                          className="text-blue-600 hover:underline"
-                        >
-                          {s.segment}
-                        </Link>
+                      <td className="px-3 py-1.5 pl-8 leading-tight text-gray-500">
+                        <span className="mr-1">↳</span>
+                        {s.segment}
                       </td>
                       <td className="px-3 py-1.5 leading-tight text-right text-gray-500">
                         {formatCurrency(Number(s.finalCost ?? 0))}
@@ -245,7 +238,7 @@ export default function SegmentwiseRevenue({
         </div>
       </div>
 
-      {/* ---------------- All Segments Table (classic styling, like Item Wise Revenue Details) ---------------- */}
+      {/* ---------------- All Segments Table (only this one has links) ---------------- */}
       <div className="bg-indigo-100 rounded-xl shadow p-5 mt-6">
         <h3 className="text-xl text-black font-semibold mb-4 text-center">
           Segment Wise Revenue Details
