@@ -277,7 +277,7 @@ export default function SegmentwiseRevenue({
               href={`/daily/${fseId}/segment/${toSlug(
                 s.segment
               )}?cutoffHour=${cutoffHour}`}
-              className="text-blue-600 hover:underline"
+              className="text-black hover:underline"
             >
               {s.segment}
             </Link>
