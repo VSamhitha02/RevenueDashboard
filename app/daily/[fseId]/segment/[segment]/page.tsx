@@ -7,6 +7,7 @@ interface PageProps {
   }>;
   searchParams: Promise<{
     cutoffHour?: string;
+    dateFilter?: string;
   }>;
 }
 
@@ -15,13 +16,14 @@ export default async function Page({
   searchParams,
 }: PageProps) {
   const { fseId, segment } = await params;
-  const { cutoffHour = "04" } = await searchParams;
+  const { cutoffHour = "04", dateFilter = "Today" } = await searchParams;
 
   return (
     <Segment
       fseId={fseId}
       selectedSegment={(segment)}
       cutoffHour={Number(cutoffHour)}
+      dateFilter={dateFilter}
     />
   );
 }
