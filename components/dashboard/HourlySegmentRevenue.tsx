@@ -25,6 +25,7 @@ interface HourlySegmentRevenueProps {
   chartData: ChartData[];
 }
 
+
 const formatCurrency = (value: number) => {
   if (value >= 10000000) {
     return `₹${(value / 10000000).toFixed(value >= 100000000 ? 0 : 1)}Cr`;
@@ -37,9 +38,20 @@ const formatCurrency = (value: number) => {
   if (value >= 1000) {
     return `₹${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}K`;
   }
+  
 
   return `₹${Number(value).toLocaleString("en-IN")}`;
 };
+
+// Full, non-abbreviated amount — used in the tooltip so hovering a bar
+// shows the exact figure instead of the K/L/Cr shorthand used on the
+// axis and bar labels.
+const formatFullCurrency = (value: number) =>
+  `₹${Number(value || 0).toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+ 
 
 export default function HourlySegmentRevenue({
   chartData,
@@ -129,7 +141,7 @@ const endHour = chartData[chartData.length - 1]?.hourLabel ?? "";
                 itemStyle={{
                   color: "#000000",
                 }}
-                formatter={(value: any) => formatCurrency(Number(value))}
+                formatter={(value: any) => formatFullCurrency(Number(value))}
               />
 
               <Legend wrapperStyle={{ color: "#000000" }} />
@@ -143,7 +155,7 @@ const endHour = chartData[chartData.length - 1]?.hourLabel ?? "";
               >
                 <LabelList
                   dataKey="offline"
-                  position="top"
+                  position="center"
                   fill="#000000"
                   fontSize={13}
                   fontWeight={700}

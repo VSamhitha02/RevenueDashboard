@@ -135,6 +135,31 @@ export default function SegmentwiseRevenue({
     0
   );
 
+  const totalQuantity = segmentRevenue.reduce(
+    (sum: number, s: any) => sum + Number(s.quantity ?? 0),
+    0
+  );
+
+  const totalItemTotal = segmentRevenue.reduce(
+    (sum: number, s: any) => sum + Number(s.itemTotal ?? 0),
+    0
+  );
+
+  const totalDiscount = segmentRevenue.reduce(
+    (sum: number, s: any) => sum + Number(s.discount ?? 0),
+    0
+  );
+
+  const totalTaxes = segmentRevenue.reduce(
+    (sum: number, s: any) => sum + Number(s.taxes ?? 0),
+    0
+  );
+
+  const totalCharges = segmentRevenue.reduce(
+    (sum: number, s: any) => sum + Number(s.charges ?? 0),
+    0
+  );
+
   return (
     <div className="bg-yellow-100 rounded-xl shadow p-5">
       <h3 className="text-2xl text-black font-bold mb-4 text-left">
@@ -305,7 +330,7 @@ export default function SegmentwiseRevenue({
 
               {segmentRevenue.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="px-3 py-3 text-center text-black text-sm">
+                  <td colSpan={8} className="px-3 py-3 text-center text-black text-sm">
                     No segment data available.
                   </td>
                 </tr>
@@ -315,6 +340,21 @@ export default function SegmentwiseRevenue({
                 <tr className="font-bold text-black bg-yellow-200">
                   <td className="px-3 py-2 text-black leading-tight" colSpan={2}>
                     Total
+                  </td>
+                  <td className="px-3 py-2 text-right text-black leading-tight">
+                    {totalQuantity.toLocaleString("en-IN")}
+                  </td>
+                  <td className="px-3 py-2 text-right text-black leading-tight">
+                    {formatCurrency(totalItemTotal)}
+                  </td>
+                  <td className="px-3 py-2 text-right text-black leading-tight">
+                    {formatCurrency(totalDiscount)}
+                  </td>
+                  <td className="px-3 py-2 text-right text-black leading-tight">
+                    {formatCurrency(totalTaxes)}
+                  </td>
+                  <td className="px-3 py-2 text-right text-black leading-tight">
+                    {formatCurrency(totalCharges)}
                   </td>
                   <td className="px-3 py-2 text-right text-black leading-tight">
                     {formatCurrency(totalFinalCost)}

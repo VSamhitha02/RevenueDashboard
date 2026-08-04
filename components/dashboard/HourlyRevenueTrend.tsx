@@ -41,6 +41,15 @@ const formatNumber = (value: number) => {
   return `₹${Number(value).toLocaleString("en-IN")}`;
 };
 
+// Full, non-abbreviated amount — used in the tooltip so hovering a bar
+// shows the exact figure instead of the K/L/Cr shorthand used on the
+// axis and bar labels.
+const formatFullNumber = (value: number) =>
+  `₹${Number(value || 0).toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
 // Custom label renderer: places values inside the bars, staggered at
 // two different heights (uneven) so adjacent labels don't collide.
 function renderStaggeredLabel(props: any) {
@@ -126,7 +135,7 @@ export default function HourlyRevenueTrend({ data }: HourlyRevenueTrendProps) {
                 itemStyle={{
                   color: "#000000",
                 }}
-                formatter={(value) => formatNumber(Number(value))}
+                formatter={(value) => formatFullNumber(Number(value))}
               />
               <Legend wrapperStyle={{ color: "#000000" }} />
 

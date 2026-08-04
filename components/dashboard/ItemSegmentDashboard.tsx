@@ -45,6 +45,11 @@ const formatChartValue = (value: number) => {
   return `₹${Number(value).toLocaleString("en-IN")}`;
 };
 
+// Full, non-abbreviated amount — used in the chart tooltip so hovering a
+// bar shows the exact figure instead of the K/L/Cr shorthand used on the
+// axis, reference line label, and bar labels.
+const formatFullCurrency = (value: number) => formatCurrency(value);
+
 const BAR_COLORS = ["#22c55e", "#f97316", "#3b82f6", "#a855f7", "#ef4444", "#14b8a6"];
 
 export default function ItemSegmentDashboard({ data,selectedSegment, cutoffHour, fseId }: Props) {
@@ -209,7 +214,7 @@ console.log(topItems);
                 <Tooltip
                   labelStyle={{ color: "#000", fontWeight: 600 }}
                   itemStyle={{ color: "#000" }}
-                  formatter={(value: any) => formatChartValue(Number(value))}
+                  formatter={(value: any) => formatFullCurrency(Number(value))}
                 />
                 <Legend wrapperStyle={{ color: "#000000" }} />
 
