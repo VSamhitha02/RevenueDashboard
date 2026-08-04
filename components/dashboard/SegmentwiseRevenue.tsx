@@ -15,6 +15,7 @@ type Props = {
   data: any; // RAW response JSON object
   fseId: string;
   cutoffHour: number;
+  dateFilter: string;
 };
 
 const formatCurrency = (value: number) =>
@@ -100,6 +101,7 @@ export default function SegmentwiseRevenue({
   data,
   fseId,
   cutoffHour,
+  dateFilter,
 }: Props) {
   // ---------------- Segment-wise totals (all segments, by finalCost) ----------------
   const segmentRevenue = data ? getSegmentWiseRevenue(data) : [];
@@ -301,7 +303,7 @@ export default function SegmentwiseRevenue({
             <Link
               href={`/daily/${fseId}/segment/${toSlug(
                 s.segment
-              )}?cutoffHour=${cutoffHour}`}
+              )}?cutoffHour=${cutoffHour} &dateFilter=${encodeURIComponent(dateFilter)}`}
               className="text-black hover:underline"
             >
               {s.segment}

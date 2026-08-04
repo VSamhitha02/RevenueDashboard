@@ -174,9 +174,10 @@ interface DashboardProps {
   fseId: string;
   selectedSegment: string;
   cutoffHour: number;
+  dateFilter: string;
 }
 
-export default function Segment({ fseId, selectedSegment, cutoffHour, }: DashboardProps) {
+export default function Segment({ fseId, selectedSegment, cutoffHour, dateFilter }: DashboardProps) {
   const searchParams = useSearchParams();
 
   const dateFilterParam =
