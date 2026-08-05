@@ -33,6 +33,12 @@ const OPTIONS: DateFilterOption[] = [
   "Custom Date Range",
 ];
 
+// Desktop button row excludes "Custom Date Range" — that one now lives
+// permanently in the fixed right-corner box instead of being a button.
+const BUTTON_OPTIONS: DateFilterOption[] = OPTIONS.filter(
+  (o) => o !== "Custom Date Range",
+);
+
 function formatDisplayDate(date: Date): string {
   return date.toLocaleDateString("en-GB", {
     day: "2-digit",
@@ -214,7 +220,7 @@ export default function DateFilter({ selected, onSelect }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false); // still used by the mobile dropdown
 
   const urlCustomDate = searchParams.get("customDate");
   const urlCustomStart = searchParams.get("customStart");
@@ -304,6 +310,70 @@ export default function DateFilter({ selected, onSelect }: Props) {
     }
   }
 
+  // Same date math as getPresetRange, but returns real Date objects so we
+  // can drop them straight into the fixed custom-range box on the right.
+  function getPresetDateRange(
+    option: DateFilterOption,
+  ): { start: Date; end: Date } | null {
+    const currentDate = new Date();
+
+    switch (option) {
+      case "Today":
+        return { start: currentDate, end: currentDate };
+
+      case "Yesterday": {
+        const yesterday = new Date(currentDate);
+        yesterday.setDate(currentDate.getDate() - 1);
+        return { start: yesterday, end: yesterday };
+      }
+
+      case "This Week": {
+        const start = new Date(currentDate);
+        const day = start.getDay();
+        const diff = day === 0 ? -6 : 1 - day;
+        start.setDate(start.getDate() + diff);
+        return { start, end: currentDate };
+      }
+
+      case "Last Week": {
+        const start = new Date(currentDate);
+        const day = start.getDay();
+        const diff = day === 0 ? -6 : 1 - day;
+        start.setDate(start.getDate() + diff - 7);
+
+        const end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        return { start, end };
+      }
+
+      case "This Month": {
+        const start = new Date(
+          currentDate.getFullYear(),
+          currentDate.getMonth(),
+          1,
+        );
+        return { start, end: currentDate };
+      }
+
+      case "Last Month": {
+        const start = new Date(
+          currentDate.getFullYear(),
+          currentDate.getMonth() - 1,
+          1,
+        );
+        const end = new Date(
+          currentDate.getFullYear(),
+          currentDate.getMonth(),
+          0,
+        );
+        return { start, end };
+      }
+
+      default:
+        return null;
+    }
+  }
+
   function updateUrl(params: Record<string, string | undefined>) {
     const next = new URLSearchParams(searchParams.toString());
     Object.entries(params).forEach(([key, value]) => {
@@ -335,6 +405,16 @@ export default function DateFilter({ selected, onSelect }: Props) {
         option === "Custom Date Range" ? customEnd?.toISOString() : undefined,
     });
 
+    // Keep the fixed right-corner range box in sync with whichever preset
+    // was just picked (e.g. "Yesterday" -> 04/08/2026 to 04/08/2026).
+    const range = getPresetDateRange(option);
+    if (range) {
+      setCustomStart(range.start);
+      setCustomEnd(range.end);
+      setStartStr(toSegmentedStr(range.start));
+      setEndStr(toSegmentedStr(range.end));
+    }
+
     setOpen(false);
   }
 
@@ -346,181 +426,164 @@ export default function DateFilter({ selected, onSelect }: Props) {
           Date Filter
         </label>
 
-        {/* Filter Button */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setOpen((o) => !o)}
-            className="bg-white border rounded-lg px-4 py-2 font-semibold text-black shadow flex items-center gap-2"
-          >
-            📅 Filter
-            <span className="text-xs">▼</span>
-          </button>
-
-          {open && (
-            <div className="absolute left-0 top-full mt-2 w-56 rounded-lg shadow-xl overflow-hidden bg-white border border-gray-200 z-50">
-              <div className="bg-orange-500 px-4 py-2 font-semibold text-white text-sm">
-                Filter by Date
-              </div>
-
-              {OPTIONS.map((option) => (
-                <div
-                  key={option}
-                  onClick={() => handleSelectOption(option)}
-                  className={`flex items-center justify-between px-4 py-2.5 cursor-pointer text-sm ${
-                    selected === option
-                      ? "bg-orange-50 text-orange-600 font-semibold"
-                      : "text-gray-800 hover:bg-gray-100"
-                  }`}
-                >
-                  <span>{option}</span>
-                  {selected === option && <span>✓</span>}
-                </div>
-              ))}
-            </div>
-          )}
+        {/* Button Group (replaces the dropdown) */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {BUTTON_OPTIONS.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => handleSelectOption(option)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                selected === option
+                  ? "bg-orange-500 border-orange-500 text-white"
+                  : "bg-white border-gray-300 text-gray-800 hover:bg-gray-100"
+              }`}
+            >
+              {option}
+            </button>
+          ))}
         </div>
 
-        {/* Selected Filter */}
+        {/* Inline single-date picker, only shown when "Custom Date" is active */}
+        {selected === "Custom Date" && (
+          <DatePicker
+            selected={customDate}
+            onChange={(date: Date | null) => {
+              setCustomDate(date);
+              if (date) {
+                setDateStr(toSegmentedStr(date));
+                onSelect("Custom Date", date.toISOString());
+                updateUrl({
+                  dateFilter: "Custom Date",
+                  customDate: date.toISOString(),
+                });
+              }
+            }}
+            maxDate={today}
+            dateFormat="dd/MM/yyyy"
+            customInput={
+              <SegmentedDateInput
+                value={dateStr}
+                onChangeValue={setDateStr}
+                onDateParsed={(d) => {
+                  setCustomDate(d);
+                  onSelect("Custom Date", d.toISOString());
+                  updateUrl({
+                    dateFilter: "Custom Date",
+                    customDate: d.toISOString(),
+                  });
+                }}
+              />
+            }
+          />
+        )}
+
+        {/* Selected filter's date / range badge */}
         <span className="bg-orange-50 border border-orange-200 text-orange-700 font-medium px-3 py-2 rounded-lg">
           {selected}
         </span>
+        <span className="bg-gray-100 border border-gray-200 text-gray-700 font-medium px-3 py-1.5 rounded-lg text-sm">
+          {selected === "Custom Date" && customDate
+            ? formatDisplayDate(customDate)
+            : selected === "Custom Date Range" && customStart && customEnd
+              ? `${formatDisplayDate(customStart)} - ${formatDisplayDate(customEnd)}`
+              : getPresetRange(selected)}
+        </span>
 
-        {/* Right Side */}
+        {/* Custom Date Range — fixed to the right corner, always visible,
+            and always refilled to match whichever filter is selected. */}
         <div className="ml-auto flex items-center gap-2">
-          {selected === "Custom Date" && (
-            <DatePicker
-              selected={customDate}
-              onChange={(date: Date | null) => {
-                setCustomDate(date);
-                if (date) {
-                  setDateStr(toSegmentedStr(date));
-                  onSelect("Custom Date", date.toISOString());
-                  updateUrl({
-                    dateFilter: "Custom Date",
-                    customDate: date.toISOString(),
-                  });
-                }
-              }}
-              maxDate={today}
-              dateFormat="dd/MM/yyyy"
-              customInput={
-                <SegmentedDateInput
-                  value={dateStr}
-                  onChangeValue={setDateStr}
-                  onDateParsed={(d) => {
-                    setCustomDate(d);
-                    onSelect("Custom Date", d.toISOString());
-                    updateUrl({
-                      dateFilter: "Custom Date",
-                      customDate: d.toISOString(),
-                    });
-                  }}
-                />
-              }
-            />
-          )}
-
-          {selected === "Custom Date Range" && (
-            <div className="flex items-center gap-2">
-              <DatePicker
-                selected={customStart}
-                onChange={(date: Date | null) => {
-                  setCustomStart(date);
-                  if (date) {
-                    setStartStr(toSegmentedStr(date));
-                    onSelect(
-                      "Custom Date Range",
-                      undefined,
-                      date.toISOString(),
-                      customEnd?.toISOString(),
-                    );
-                    updateUrl({
-                      dateFilter: "Custom Date Range",
-                      customStart: date.toISOString(),
-                      customEnd: customEnd?.toISOString(),
-                    });
-                  }
-                }}
-                maxDate={today}
-                dateFormat="dd/MM/yyyy"
-                customInput={
-                  <SegmentedDateInput
-                    value={startStr}
-                    onChangeValue={setStartStr}
-                    onDateParsed={(d) => {
-                      setCustomStart(d);
-                      onSelect(
-                        "Custom Date Range",
-                        undefined,
-                        d.toISOString(),
-                        customEnd?.toISOString(),
-                      );
-                      updateUrl({
-                        dateFilter: "Custom Date Range",
-                        customStart: d.toISOString(),
-                        customEnd: customEnd?.toISOString(),
-                      });
-                    }}
-                  />
-                }
-              />
-
-              <span className="text-gray-500 font-medium">to</span>
-
-              <DatePicker
-                selected={customEnd}
-                onChange={(date: Date | null) => {
-                  setCustomEnd(date);
-                  if (date) {
-                    setEndStr(toSegmentedStr(date));
-                    onSelect(
-                      "Custom Date Range",
-                      undefined,
-                      customStart?.toISOString(),
-                      date.toISOString(),
-                    );
-                    updateUrl({
-                      dateFilter: "Custom Date Range",
-                      customStart: customStart?.toISOString(),
-                      customEnd: date.toISOString(),
-                    });
-                  }
-                }}
-                minDate={customStart || undefined}
-                maxDate={today}
-                dateFormat="dd/MM/yyyy"
-                customInput={
-                  <SegmentedDateInput
-                    value={endStr}
-                    onChangeValue={setEndStr}
-                    onDateParsed={(d) => {
-                      setCustomEnd(d);
-                      onSelect(
-                        "Custom Date Range",
-                        undefined,
-                        customStart?.toISOString(),
-                        d.toISOString(),
-                      );
-                      updateUrl({
-                        dateFilter: "Custom Date Range",
-                        customStart: customStart?.toISOString(),
-                        customEnd: d.toISOString(),
-                      });
-                    }}
-                  />
-                }
-              />
-            </div>
-          )}
-
-          <span className="bg-gray-100 border border-gray-200 text-gray-700 font-medium px-3 py-1.5 rounded-lg text-sm">
-            {selected === "Custom Date" && customDate
-              ? formatDisplayDate(customDate)
-              : selected === "Custom Date Range" && customStart && customEnd
-                ? `${formatDisplayDate(customStart)} - ${formatDisplayDate(customEnd)}`
-                : getPresetRange(selected)}
+          <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">
+            Custom Range
           </span>
+          <DatePicker
+            selected={customStart}
+            onChange={(date: Date | null) => {
+              setCustomStart(date);
+              if (date) {
+                setStartStr(toSegmentedStr(date));
+                onSelect(
+                  "Custom Date Range",
+                  undefined,
+                  date.toISOString(),
+                  customEnd?.toISOString(),
+                );
+                updateUrl({
+                  dateFilter: "Custom Date Range",
+                  customStart: date.toISOString(),
+                  customEnd: customEnd?.toISOString(),
+                });
+              }
+            }}
+            maxDate={today}
+            dateFormat="dd/MM/yyyy"
+            customInput={
+              <SegmentedDateInput
+                value={startStr}
+                onChangeValue={setStartStr}
+                onDateParsed={(d) => {
+                  setCustomStart(d);
+                  onSelect(
+                    "Custom Date Range",
+                    undefined,
+                    d.toISOString(),
+                    customEnd?.toISOString(),
+                  );
+                  updateUrl({
+                    dateFilter: "Custom Date Range",
+                    customStart: d.toISOString(),
+                    customEnd: customEnd?.toISOString(),
+                  });
+                }}
+              />
+            }
+          />
+
+          <span className="text-gray-500 font-medium">to</span>
+
+          <DatePicker
+            selected={customEnd}
+            onChange={(date: Date | null) => {
+              setCustomEnd(date);
+              if (date) {
+                setEndStr(toSegmentedStr(date));
+                onSelect(
+                  "Custom Date Range",
+                  undefined,
+                  customStart?.toISOString(),
+                  date.toISOString(),
+                );
+                updateUrl({
+                  dateFilter: "Custom Date Range",
+                  customStart: customStart?.toISOString(),
+                  customEnd: date.toISOString(),
+                });
+              }
+            }}
+            minDate={customStart || undefined}
+            maxDate={today}
+            dateFormat="dd/MM/yyyy"
+            customInput={
+              <SegmentedDateInput
+                value={endStr}
+                onChangeValue={setEndStr}
+                onDateParsed={(d) => {
+                  setCustomEnd(d);
+                  onSelect(
+                    "Custom Date Range",
+                    undefined,
+                    customStart?.toISOString(),
+                    d.toISOString(),
+                  );
+                  updateUrl({
+                    dateFilter: "Custom Date Range",
+                    customStart: customStart?.toISOString(),
+                    customEnd: d.toISOString(),
+                  });
+                }}
+              />
+            }
+          />
         </div>
       </div>
 
