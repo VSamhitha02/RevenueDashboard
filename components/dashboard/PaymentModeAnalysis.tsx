@@ -50,20 +50,12 @@ const formatAmount = (value: number, short = false) => {
   return `₹${Number(value).toLocaleString("en-IN")}`;
 };
 
-// Turns raw mode keys like "noCharge" / "dineout" into readable labels
-// like "No Charge" / "Dineout" — display only, doesn't touch the data.
 const formatModeLabel = (mode: string) => {
   const spaced = mode.replace(/([A-Z])/g, " $1").trim();
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 };
 
-// Recharts margins used by the stacked BarChart below — the card
-// math has to match these exactly or the card drifts off the bar.
 const CHART_MARGIN = { top: 80, right: 30, left: 35, bottom: 20 };
-
-// Fixed height for the split card — there are at most 3 possible rows
-// (Card / Others / Not Paid), so the card always has room for all 3
-// even if a given bar only has 1 or 2 non-zero segments.
 const CARD_HEIGHT = 88;
 const CARD_TOP = 20;
 
@@ -72,7 +64,6 @@ export default function PaymentModeAnalysis({
   barData,
   othersBreakdown,
 }: Props) {
-  // Which bar's split card is currently open (null = none shown).
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const totalRevenue = barData.reduce(
@@ -90,13 +81,6 @@ export default function PaymentModeAnalysis({
   };
 
   const RADIAN = Math.PI / 180;
-
-  // Small adjacent slices (e.g. 0.7% / 1.9% / 2.5%) land at nearly the
-  // same label position and overlap. This ref accumulates the labels
-  // already placed *during the current render pass* so each new label
-  // can be nudged clear of the ones before it. It's reset whenever
-  // index === 0 (start of a fresh pass) — safe because Recharts calls
-  // this synchronously, in order, once per Pie render.
   const pieLabelPositionsRef = useRef<Array<{ y: number; side: "left" | "right" }>>([]);
   const MIN_LABEL_GAP = 16;
 
@@ -107,22 +91,15 @@ export default function PaymentModeAnalysis({
       pieLabelPositionsRef.current = [];
     }
 
-    // Match the leader line + label color to this slice's own color
-    // (falls back to the same near-black Recharts uses for unmapped names).
     const sliceColor = PIE_COLORS[name as keyof typeof PIE_COLORS] || "#040404";
-
-    // Point on the slice's edge — where the leader line starts.
     const innerX = cx + outerRadius * Math.cos(-midAngle * RADIAN);
     const innerY = cy + outerRadius * Math.sin(-midAngle * RADIAN);
 
-    // Preferred (un-adjusted) label position.
     const labelRadius = outerRadius + 30;
     let x = cx + labelRadius * Math.cos(-midAngle * RADIAN);
     let y = cy + labelRadius * Math.sin(-midAngle * RADIAN);
     const side: "left" | "right" = x >= cx ? "right" : "left";
 
-    // Push straight down past any same-side label already placed
-    // this pass, so tightly clustered small slices stay legible.
     for (const prior of pieLabelPositionsRef.current) {
       if (prior.side === side && Math.abs(y - prior.y) < MIN_LABEL_GAP) {
         y = prior.y + MIN_LABEL_GAP;
@@ -158,12 +135,6 @@ export default function PaymentModeAnalysis({
   const average = barData.length === 0 ? 0 : totalRevenue / barData.length;
   const sortedLegend = [...pieData].sort((a, b) => b.value - a.value);
 
-  // ---------------------------------------------------------------
-  // Responsive measurement: track the *actual* rendered width of the
-  // scrollable chart container so both the min-width style and the
-  // card position stay correct on resize (window.innerWidth read once
-  // at render time doesn't update on its own).
-  // ---------------------------------------------------------------
   const chartWrapRef = useRef<HTMLDivElement>(null);
   const [wrapWidth, setWrapWidth] = useState(0);
   const [viewportWide, setViewportWide] = useState(false);
@@ -194,26 +165,18 @@ export default function PaymentModeAnalysis({
     ? undefined
     : Math.max(barData.length * 130, 900);
 
-  // Plotting area = full chart width minus left/right margins Recharts uses.
   const plotWidth = Math.max(
     0,
     (minWidthPx ?? wrapWidth) - CHART_MARGIN.left - CHART_MARGIN.right,
   );
   const slotWidth = barData.length > 0 ? plotWidth / barData.length : 0;
-
-  // Card width is capped by the slot it lives in so it can never
-  // overlap neighboring bars, and floored/ceilinged to readable sizes.
   const cardWidth = Math.max(72, Math.min(132, slotWidth - 10));
-  // Below this, even a name + amount row is too cramped — drop to
-  // short codes ("Card", "Oth", "N/P") instead of full names.
   const useShortNames = cardWidth < 92;
 
   const handleBarClick = (_data: any, index: number) => {
     setActiveIndex((prev) => (prev === index ? null : index));
   };
 
-  // Center-left position (px) of a given bar's slot, matching Recharts'
-  // own category layout, clamped so the card never overflows either edge.
   const leftPx = (index: number) => {
     const slotCenter = CHART_MARGIN.left + slotWidth * (index + 0.5);
     const totalWidth = minWidthPx ?? wrapWidth;
@@ -223,7 +186,6 @@ export default function PaymentModeAnalysis({
     );
   };
 
-  // Rows shown inside the card for whichever bar is currently active.
   const activeRows = (() => {
     if (activeIndex === null || !barData[activeIndex]) return [];
     const item = barData[activeIndex];
@@ -238,21 +200,15 @@ export default function PaymentModeAnalysis({
   const connectorHeight = Math.max(0, CHART_MARGIN.top - connectorTop);
 
   return (
-    <div className="bg-orange-100 rounded-lg shadow-md p-5">
-      {/*
-        Scrollbar is hidden (but scrolling still works) at desktop widths
-        only. Below the lg breakpoint (mobile/tablet), the native
-        scrollbar is left visible since those viewports actually rely on
-        horizontal scroll to see the full chart.
-      */}
+    <div className="bg-orange-100 rounded-lg shadow-md p-4 sm:p-5">
       <style jsx>{`
         @media (min-width: 1024px) {
           .desktop-hide-scrollbar {
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE / legacy Edge */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
           }
           .desktop-hide-scrollbar::-webkit-scrollbar {
-            display: none; /* Chrome / Safari / new Edge */
+            display: none;
           }
         }
       `}</style>
@@ -263,10 +219,10 @@ export default function PaymentModeAnalysis({
 
       {/* ---------------- PIE CHART + TABLE ---------------- */}
 
-      <div className="mb-10 flex flex-col md:flex-row gap-8 items-start">
-        {/* Pie Chart */}
+      <div className="mb-10 flex flex-col md:flex-row gap-6 md:gap-8 items-stretch">
+        {/* Pie Chart Container */}
         <div className="flex-1 w-full overflow-x-auto desktop-hide-scrollbar">
-          <div className="min-w-[500px] h-[450px]">
+          <div className="min-w-[340px] sm:min-w-[480px] h-[340px] sm:h-[400px] md:h-[450px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -275,7 +231,7 @@ export default function PaymentModeAnalysis({
                   nameKey="name"
                   cx="50%"
                   cy="50%"
-                  outerRadius={120}
+                  outerRadius={100}
                   label={renderLabel}
                   labelLine={false}
                 >
@@ -305,7 +261,7 @@ export default function PaymentModeAnalysis({
                         display: "flex",
                         justifyContent: "center",
                         flexWrap: "wrap",
-                        gap: "16px",
+                        gap: "12px",
                         marginTop: "10px",
                       }}
                     >
@@ -320,8 +276,8 @@ export default function PaymentModeAnalysis({
                         >
                           <span
                             style={{
-                              width: 12,
-                              height: 12,
+                              width: 10,
+                              height: 10,
                               borderRadius: 2,
                               backgroundColor:
                                 PIE_COLORS[
@@ -331,6 +287,7 @@ export default function PaymentModeAnalysis({
                             }}
                           />
                           <span
+                            className="text-xs sm:text-sm"
                             style={{
                               color:
                                 PIE_COLORS[
@@ -350,66 +307,65 @@ export default function PaymentModeAnalysis({
           </div>
         </div>
 
-        {/* Summary Table */}
-        <div className="w-80 mx-auto md:mx-auto lg:mx-0 rounded-lg border border-gray-200 bg-white shadow-sm p-4">
-          <h3 className="text-lg font-semibold text-black mb-4">
+        {/* Payment Summary Table */}
+        <div className="w-full max-w-md mx-auto md:w-80 shrink-0 rounded-lg border border-gray-200 bg-white shadow-sm p-4">
+          <h3 className="text-base sm:text-lg font-semibold text-black mb-3">
             Payment Summary
           </h3>
 
-          <table className="w-full text-sm text-black">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left py-2">Mode</th>
-                <th className="text-right py-2">Amount</th>
-              </tr>
-            </thead>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs sm:text-sm text-black">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2 font-medium">Mode</th>
+                  <th className="text-right py-2 font-medium">Amount</th>
+                </tr>
+              </thead>
 
-            <tbody>
-              <tr className="border-b bg-gray-50">
-                <td className="py-2 font-semibold text-black">Others</td>
-                <td className="py-2 text-right font-semibold text-black">
-                  ₹
-                  {Number(
-                    pieData.find((item) => item.name === "Others")?.value ||
-                      0,
-                  ).toLocaleString("en-IN")}
-                </td>
-              </tr>
-
-              {Object.keys(othersBreakdown).length === 0 ? (
-                <tr>
-                  <td colSpan={2} className="py-3 text-center text-gray-500">
-                    No breakdown available
+              <tbody>
+                <tr className="border-b bg-gray-50">
+                  <td className="py-2.5 font-semibold text-black">Others</td>
+                  <td className="py-2.5 text-right font-semibold text-black">
+                    ₹
+                    {Number(
+                      pieData.find((item) => item.name === "Others")?.value ||
+                        0,
+                    ).toLocaleString("en-IN")}
                   </td>
                 </tr>
-              ) : (
-                Object.entries(othersBreakdown)
-                  .sort(([, a], [, b]) => b - a)
-                  .map(([mode, amount]) => (
-                    <tr key={mode}>
-                      <td className="pl-6 py-2 text-gray-600">
-                        ↳ {formatModeLabel(mode)}
-                      </td>
-                      <td className="py-2 text-right text-gray-600">
-                        ₹{Number(amount).toLocaleString("en-IN")}
-                      </td>
-                    </tr>
-                  ))
-              )}
-            </tbody>
-          </table>
+
+                {Object.keys(othersBreakdown).length === 0 ? (
+                  <tr>
+                    <td colSpan={2} className="py-3 text-center text-gray-500">
+                      No breakdown available
+                    </td>
+                  </tr>
+                ) : (
+                  Object.entries(othersBreakdown)
+                    .sort(([, a], [, b]) => b - a)
+                    .map(([mode, amount]) => (
+                      <tr key={mode} className="border-b border-gray-100 last:border-b-0">
+                        <td className="pl-4 sm:pl-6 py-2 text-gray-600 truncate max-w-[140px]">
+                          ↳ {formatModeLabel(mode)}
+                        </td>
+                        <td className="py-2 text-right text-gray-600 font-mono text-xs sm:text-sm">
+                          ₹{Number(amount).toLocaleString("en-IN")}
+                        </td>
+                      </tr>
+                    ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       {/* ---------------- BAR CHART ---------------- */}
-      <div className="mt-2 mb-2 text-xs text-gray-500">
-        
-      </div>
 
       <div className="relative w-full overflow-x-auto desktop-hide-scrollbar">
         <div
           ref={chartWrapRef}
-          className="h-[450px]"
+          className="h-[400px] sm:h-[450px]"
           style={{
             minWidth: minWidthPx ? `${minWidthPx}px` : "100%",
           }}
@@ -418,9 +374,9 @@ export default function PaymentModeAnalysis({
             <BarChart data={barData} margin={CHART_MARGIN}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
-   <YAxis
-  tickFormatter={(value) => formatAmount(Number(value), true)}
-/>
+              <YAxis
+                tickFormatter={(value) => formatAmount(Number(value), true)}
+              />
               <Tooltip
                 labelStyle={{ color: "#000", fontWeight: 600 }}
                 formatter={(value: any, name: any) => [
@@ -534,10 +490,6 @@ export default function PaymentModeAnalysis({
           </ResponsiveContainer>
         </div>
 
-        {/* SPLIT CARD — only the clicked bar's card is ever shown, so it
-            never has to compete for space with neighbors. Sits above the
-            bar it belongs to, with a dashed connector line pointing down
-            to the top of the plotting area at that bar's center. */}
         {activeIndex !== null && activeRows.length > 0 && slotWidth > 0 && (
           <>
             <div

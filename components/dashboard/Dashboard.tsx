@@ -128,7 +128,7 @@ export default function Dashboard({ fseId, cutoffHour }: DashboardProps) {
     <main className="min-h-screen bg-slate-100">
       <div className="max-w-7xl mx-auto px-8 py-8">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold text-black">
+          <h1 className="lg:text-4xl md:text-4xl sm:text-4xl font-bold text-black">
             Revenue Dashboard
           </h1>
         </div>

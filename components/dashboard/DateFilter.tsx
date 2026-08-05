@@ -153,7 +153,7 @@ const SegmentedDateInput = forwardRef<HTMLDivElement, InputProps>(
       <div
         ref={ref}
         onClick={disabled ? undefined : onClick}
-        className={`flex items-center gap-0.5 border border-gray-300 rounded-lg px-2 py-1 text-xs font-mono text-black shadow-sm ${
+        className={`flex items-center gap-0.5 border border-gray-300 rounded-lg px-1.5 py-1 text-xs font-mono text-black shadow-sm shrink-0 ${
           disabled
             ? "bg-gray-100 cursor-not-allowed opacity-80"
             : "focus-within:ring-2 focus-within:ring-orange-500 cursor-text"
@@ -371,14 +371,12 @@ export default function DateFilter({ selected, onSelect, cutoffHour, onCutoffCha
   const isEditable = selected === "Custom";
 
   const renderDateInputs = () => (
-    <div className="flex items-center gap-1.5 whitespace-nowrap">
-      <span className="text-xs font-semibold text-gray-500">From</span>
+    <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto whitespace-nowrap">
+      <span className="text-xs font-semibold text-gray-500 shrink-0">From</span>
       <DatePicker
         selected={customStart}
         disabled={!isEditable}
         popperPlacement="bottom-start"
-       
-
         onChange={(date: Date | null) => {
           if (!isEditable) return;
           setCustomStart(date);
@@ -423,13 +421,12 @@ export default function DateFilter({ selected, onSelect, cutoffHour, onCutoffCha
         }
       />
 
-      <span className="text-xs font-semibold text-gray-500">to</span>
+      <span className="text-xs font-semibold text-gray-500 shrink-0">to</span>
 
       <DatePicker
         selected={customEnd}
         disabled={!isEditable}
         popperPlacement="bottom-start"
-
         onChange={(date: Date | null) => {
           if (!isEditable) return;
           setCustomEnd(date);
@@ -478,7 +475,7 @@ export default function DateFilter({ selected, onSelect, cutoffHour, onCutoffCha
   );
 
   const renderCutoffHour = () => (
-    <div className="flex items-center gap-1.5 whitespace-nowrap">
+    <div className="flex items-center gap-1.5 whitespace-nowrap shrink-0">
       <span className="text-xs font-semibold text-black">Cutoff</span>
       <select
         value={cutoffValue}
@@ -504,41 +501,39 @@ export default function DateFilter({ selected, onSelect, cutoffHour, onCutoffCha
 
   return (
     <div className="sticky top-0 z-50 bg-white rounded-lg shadow-md px-4 py-3 mb-6">
-      {/* ---------------- Unified Single Line Container ---------------- */}
-      <div className="flex items-center justify-between gap-4 overflow-x-auto pb-1">
-        {/* Left: Desktop Buttons / Mobile Dropdown */}
-        <div className="flex items-center gap-2">
-          {/* Desktop Filter Options */}
-          <div className="hidden lg:flex items-center gap-2">
-            {BUTTON_OPTIONS.map((option) => (
-              <button
-                key={option}
-                type="button"
-                onClick={() => handleSelectOption(option)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                  selected === option
-                    ? "bg-orange-500 border-orange-500 text-white"
-                    : "bg-white border-gray-300 text-gray-800 hover:bg-gray-100"
-                }`}
-              >
-                {option}
-              </button>
-            ))}
-          </div>
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        {/* Desktop & iPad (md+) Filter Options Buttons */}
+        <div className="hidden md:flex items-center gap-1.5 flex-wrap">
+          {BUTTON_OPTIONS.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => handleSelectOption(option)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
+                selected === option
+                  ? "bg-orange-500 border-orange-500 text-white"
+                  : "bg-white border-gray-300 text-gray-800 hover:bg-gray-100"
+              }`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
 
-          {/* Mobile Filter Dropdown */}
-          <div className="relative inline-block lg:hidden">
+        {/* Mobile Phones Only (< md) Row 1: Dropdown + Cutoff Hour */}
+        <div className="flex items-center justify-between gap-3 md:hidden">
+          <div className="relative inline-block">
             <button
               type="button"
               onClick={() => setOpen((o) => !o)}
               className="bg-white border border-gray-300 rounded-lg px-3 py-1 text-xs font-semibold text-black shadow-sm flex items-center gap-1.5"
             >
-              📅 {selected}
+              {selected}
               <span className="text-[10px]">▼</span>
             </button>
 
             {open && (
-              <div className="absolute left-0 z-50 mt-2 w-48 rounded-lg shadow-xl overflow-hidden bg-white border border-gray-200">
+              <div className="absolute left-0 z-[60] mt-2 w-48 rounded-lg shadow-xl overflow-hidden bg-white border border-gray-200">
                 <div className="bg-orange-500 px-3 py-1.5 font-semibold text-white text-xs">
                   Filter by Date
                 </div>
@@ -560,13 +555,15 @@ export default function DateFilter({ selected, onSelect, cutoffHour, onCutoffCha
               </div>
             )}
           </div>
+
+          {renderCutoffHour()}
         </div>
 
-        {/* Right Side: Date Range Inputs + Cutoff Hour */}
-        <div className="flex items-center gap-3">
+        {/* Date Ranges & Cutoff (for iPad/Desktop) */}
+        <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto">
           {renderDateInputs()}
-          <div className="h-5 w-px bg-gray-300" />
-          {renderCutoffHour()}
+          <div className="hidden md:block h-5 w-px bg-gray-300 shrink-0" />
+          <div className="hidden md:block shrink-0">{renderCutoffHour()}</div>
         </div>
       </div>
     </div>
