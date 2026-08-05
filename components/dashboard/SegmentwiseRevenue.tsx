@@ -38,7 +38,6 @@ const formatChartValue = (value: number) => {
 };
 
 // Converts "Beverages", "Health & Hygiene", etc. into a URL-safe slug
-// e.g. "Health & Hygiene" -> "health-and-hygiene"
 const toSlug = (str: string) =>
   String(str)
     .toLowerCase()
@@ -103,8 +102,29 @@ export default function SegmentwiseRevenue({
   cutoffHour,
   dateFilter,
 }: Props) {
-  // ---------------- Segment-wise totals (all segments, by finalCost) ----------------
-  const segmentRevenue = data ? getSegmentWiseRevenue(data) : [];
+  // ---------------- Segment-wise totals ----------------
+  const rawSegmentRevenue = data ? getSegmentWiseRevenue(data) : [];
+
+  // Map and compute the true row total for each segment
+  const segmentRevenue = rawSegmentRevenue.map((s: any) => {
+    const itemTotal = Number(s.itemTotal ?? s.finalCost ?? 0);
+    const discount = Number(s.discount ?? 0);
+    const taxes = Number(s.taxes ?? 0);
+    const charges = Number(s.charges ?? 0);
+    const quantity = Number(s.quantity ?? 0);
+
+    const grandTotal = itemTotal - discount + taxes + charges;
+
+    return {
+      ...s,
+      quantity,
+      itemTotal,
+      discount,
+      taxes,
+      charges,
+      grandTotal,
+    };
+  });
 
   const top5Segments = segmentRevenue.slice(0, 5);
   const remainingSegments = segmentRevenue.slice(5);
@@ -112,14 +132,14 @@ export default function SegmentwiseRevenue({
   const pieData = [
     ...top5Segments.map((s: any) => ({
       name: s.segment,
-      value: Number(s.finalCost ?? 0),
+      value: s.grandTotal,
     })),
     ...(remainingSegments.length > 0
       ? [
           {
             name: "Others",
             value: remainingSegments.reduce(
-              (sum: number, s: any) => sum + Number(s.finalCost ?? 0),
+              (sum: number, s: any) => sum + s.grandTotal,
               0
             ),
           },
@@ -127,39 +147,29 @@ export default function SegmentwiseRevenue({
       : []),
   ];
 
-  const remainingTotalFinalCost = remainingSegments.reduce(
-    (sum: number, s: any) => sum + Number(s.finalCost ?? 0),
+  const remainingTotalGrandTotal = remainingSegments.reduce(
+    (sum: number, s: any) => sum + s.grandTotal,
     0
   );
 
-  const totalFinalCost = segmentRevenue.reduce(
-    (sum: number, s: any) => sum + Number(s.finalCost ?? 0),
-    0
-  );
-
-  const totalQuantity = segmentRevenue.reduce(
-    (sum: number, s: any) => sum + Number(s.quantity ?? 0),
-    0
-  );
-
-  const totalItemTotal = segmentRevenue.reduce(
-    (sum: number, s: any) => sum + Number(s.itemTotal ?? 0),
-    0
-  );
-
-  const totalDiscount = segmentRevenue.reduce(
-    (sum: number, s: any) => sum + Number(s.discount ?? 0),
-    0
-  );
-
-  const totalTaxes = segmentRevenue.reduce(
-    (sum: number, s: any) => sum + Number(s.taxes ?? 0),
-    0
-  );
-
-  const totalCharges = segmentRevenue.reduce(
-    (sum: number, s: any) => sum + Number(s.charges ?? 0),
-    0
+  // Calculate table footer totals across all segment rows
+  const tableTotals = segmentRevenue.reduce(
+    (acc: any, s: any) => ({
+      quantity: acc.quantity + s.quantity,
+      itemTotal: acc.itemTotal + s.itemTotal,
+      discount: acc.discount + s.discount,
+      taxes: acc.taxes + s.taxes,
+      charges: acc.charges + s.charges,
+      grandTotal: acc.grandTotal + s.grandTotal,
+    }),
+    {
+      quantity: 0,
+      itemTotal: 0,
+      discount: 0,
+      taxes: 0,
+      charges: 0,
+      grandTotal: 0,
+    }
   );
 
   return (
@@ -186,7 +196,7 @@ export default function SegmentwiseRevenue({
                   dataKey="value"
                   nameKey="name"
                   cx="50%"
-                  cy="52%" // Move chart a little down
+                  cy="52%"
                   outerRadius={105}
                   label={(entry: any) => formatChartValue(Number(entry.value))}
                 >
@@ -208,7 +218,7 @@ export default function SegmentwiseRevenue({
                   verticalAlign="bottom"
                   align="center"
                   wrapperStyle={{
-                    paddingTop: "20px", // Space between pie and legend
+                    paddingTop: "20px",
                   }}
                 />
               </PieChart>
@@ -220,13 +230,13 @@ export default function SegmentwiseRevenue({
           )}
         </div>
 
-        {/* Remaining segments table (no links here) */}
+        {/* Remaining segments table */}
         <div className="w-full lg:w-1/2 min-w-0 overflow-auto bg-white rounded-xl border border-gray-100 p-5">
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="border-b-2 border-black">
                 <th className="px-3 py-2 text-left text-black font-bold">Segment</th>
-                <th className="px-3 py-2 text-right text-black font-bold">Final Cost</th>
+                <th className="px-3 py-2 text-right text-black font-bold">Total Revenue</th>
               </tr>
             </thead>
             <tbody>
@@ -237,7 +247,7 @@ export default function SegmentwiseRevenue({
                       Others
                     </td>
                     <td className="px-3 py-2 leading-tight text-right text-black font-bold">
-                      {formatCurrency(remainingTotalFinalCost)}
+                      {formatCurrency(remainingTotalGrandTotal)}
                     </td>
                   </tr>
 
@@ -248,7 +258,7 @@ export default function SegmentwiseRevenue({
                         {s.segment}
                       </td>
                       <td className="px-3 py-1.5 leading-tight text-right text-gray-500">
-                        {formatCurrency(Number(s.finalCost ?? 0))}
+                        {formatCurrency(s.grandTotal)}
                       </td>
                     </tr>
                   ))}
@@ -265,7 +275,7 @@ export default function SegmentwiseRevenue({
         </div>
       </div>
 
-      {/* ---------------- All Segments Table (only this one has links) ---------------- */}
+      {/* ---------------- All Segments Table ---------------- */}
       <div className="bg-indigo-100 rounded-xl shadow p-5 mt-6">
         <h3 className="text-xl text-black font-semibold mb-4 text-center">
           Segment Wise Revenue Details
@@ -273,62 +283,62 @@ export default function SegmentwiseRevenue({
 
         <div className="overflow-auto">
           <table className="w-full text-sm border-collapse">
-    <thead>
-      <tr className="bg-orange-200">
-        <th className="px-3 py-2 text-center text-black">S. No.</th>
-        <th className="px-3 py-2 text-left text-black">Segment</th>
-        <th className="px-3 py-2 text-right text-black">Quantity</th>
-        <th className="px-3 py-2 text-right text-black">Item Total</th>
-        <th className="px-3 py-2 text-right text-black">Discount</th>
-        <th className="px-3 py-2 text-right text-black">Taxes</th>
-        <th className="px-3 py-2 text-right text-black">Charges</th>
-        <th className="px-3 py-2 text-right text-black">Total Revenue</th>
-      </tr>
-    </thead>
+            <thead>
+              <tr className="bg-orange-200">
+                <th className="px-3 py-2 text-center text-black">S. No.</th>
+                <th className="px-3 py-2 text-left text-black">Segment</th>
+                <th className="px-3 py-2 text-right text-black">Quantity</th>
+                <th className="px-3 py-2 text-right text-black">Item Total</th>
+                <th className="px-3 py-2 text-right text-black">Discount</th>
+                <th className="px-3 py-2 text-right text-black">Taxes</th>
+                <th className="px-3 py-2 text-right text-black">Charges</th>
+                <th className="px-3 py-2 text-right text-black">Total Revenue</th>
+              </tr>
+            </thead>
 
-    <tbody>
-      {segmentRevenue.map((s: any, index: number) => (
-        <tr
-          key={index}
-          className={
-            index % 2 === 0
-              ? "bg-blue-100 border-b border-blue-200"
-              : "bg-blue-300 border-b border-blue-200"
-          }
-        >
-          <td className="px-3 py-1.5 leading-tight text-center text-black">
-            {index + 1}
-          </td>
-          <td className="px-3 py-1.5 leading-tight text-black">
-            <Link
-              href={`/daily/${fseId}/segment/${toSlug(
-                s.segment
-              )}?cutoffHour=${cutoffHour} &dateFilter=${encodeURIComponent(dateFilter)}`}
-              className="text-black hover:underline"
-            >
-              {s.segment}
-            </Link>
-          </td>
-          <td className="px-3 py-1.5 leading-tight text-right text-black">
-            {Number(s.quantity ?? 0).toLocaleString("en-IN")}
-          </td>
-          <td className="px-3 py-1.5 leading-tight text-right text-black">
-            {formatCurrency(Number(s.itemTotal ?? 0))}
-          </td>
-          <td className="px-3 py-1.5 leading-tight text-right text-black">
-            {formatCurrency(Number(s.discount ?? 0))}
-          </td>
-          <td className="px-3 py-1.5 leading-tight text-right text-black">
-            {formatCurrency(Number(s.taxes ?? 0))}
-          </td>
-          <td className="px-3 py-1.5 leading-tight text-right text-black">
-            {formatCurrency(Number(s.charges ?? 0))}
-          </td>
-          <td className="px-3 py-1.5 leading-tight text-right text-black font-semibold">
-            {formatCurrency(Number(s.finalCost ?? 0))}
-          </td>
-        </tr>
-      ))}
+            <tbody>
+              {segmentRevenue.map((s: any, index: number) => (
+                <tr
+                  key={index}
+                  className={
+                    index % 2 === 0
+                      ? "bg-blue-100 border-b border-blue-200"
+                      : "bg-blue-300 border-b border-blue-200"
+                  }
+                >
+                  <td className="px-3 py-1.5 leading-tight text-center text-black">
+                    {index + 1}
+                  </td>
+                  <td className="px-3 py-1.5 leading-tight text-black">
+                    <Link
+                      href={`/daily/${fseId}/segment/${toSlug(
+                        s.segment
+                      )}?cutoffHour=${cutoffHour}&dateFilter=${encodeURIComponent(dateFilter)}`}
+                      className="text-black hover:underline"
+                    >
+                      {s.segment}
+                    </Link>
+                  </td>
+                  <td className="px-3 py-1.5 leading-tight text-right text-black">
+                    {s.quantity.toLocaleString("en-IN")}
+                  </td>
+                  <td className="px-3 py-1.5 leading-tight text-right text-black">
+                    {formatCurrency(s.itemTotal)}
+                  </td>
+                  <td className="px-3 py-1.5 leading-tight text-right text-black">
+                    {formatCurrency(s.discount)}
+                  </td>
+                  <td className="px-3 py-1.5 leading-tight text-right text-black">
+                    {formatCurrency(s.taxes)}
+                  </td>
+                  <td className="px-3 py-1.5 leading-tight text-right text-black">
+                    {formatCurrency(s.charges)}
+                  </td>
+                  <td className="px-3 py-1.5 leading-tight text-right text-black font-semibold">
+                    {formatCurrency(s.grandTotal)}
+                  </td>
+                </tr>
+              ))}
 
               {segmentRevenue.length === 0 && (
                 <tr>
@@ -344,22 +354,22 @@ export default function SegmentwiseRevenue({
                     Total
                   </td>
                   <td className="px-3 py-2 text-right text-black leading-tight">
-                    {totalQuantity.toLocaleString("en-IN")}
+                    {tableTotals.quantity.toLocaleString("en-IN")}
                   </td>
                   <td className="px-3 py-2 text-right text-black leading-tight">
-                    {formatCurrency(totalItemTotal)}
+                    {formatCurrency(tableTotals.itemTotal)}
                   </td>
                   <td className="px-3 py-2 text-right text-black leading-tight">
-                    {formatCurrency(totalDiscount)}
+                    {formatCurrency(tableTotals.discount)}
                   </td>
                   <td className="px-3 py-2 text-right text-black leading-tight">
-                    {formatCurrency(totalTaxes)}
+                    {formatCurrency(tableTotals.taxes)}
                   </td>
                   <td className="px-3 py-2 text-right text-black leading-tight">
-                    {formatCurrency(totalCharges)}
+                    {formatCurrency(tableTotals.charges)}
                   </td>
                   <td className="px-3 py-2 text-right text-black leading-tight">
-                    {formatCurrency(totalFinalCost)}
+                    {formatCurrency(tableTotals.grandTotal)}
                   </td>
                 </tr>
               )}
