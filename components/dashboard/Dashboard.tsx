@@ -24,6 +24,7 @@ import {
 } from "@/utils/chartData";
 import { useSearchParams } from "next/navigation";
 import ItemSegment from "./ItemSegment";
+import { useRouter, usePathname } from "next/navigation";
 
 interface DashboardProps {
   fseId: string;
@@ -33,6 +34,11 @@ interface DashboardProps {
 export default function Dashboard({ fseId, cutoffHour, }: DashboardProps) {
   const searchParams = useSearchParams();
 
+  const router = useRouter();
+const pathname = usePathname();
+
+const currentCutoff =
+  searchParams.get("cutoffHour") ?? cutoffHour.toString().padStart(2, "0");
   const dateFilterParam =
     (searchParams.get("dateFilter") as DateFilterOption) ?? "Today";
   const customDateParam = searchParams.get("customDate") ?? undefined;
@@ -121,6 +127,18 @@ export default function Dashboard({ fseId, cutoffHour, }: DashboardProps) {
   //   return <div className="p-10">No data found</div>;
   // }
 
+  const cutoffOptions = ["00", "04", "08", "12"];
+
+function handleCutoffChange(hour: string) {
+  const params = new URLSearchParams(searchParams.toString());
+
+  params.set("cutoffHour", hour);
+
+  router.replace(`${pathname}?${params.toString()}`, {
+    scroll: false,
+  });
+}
+
   const hourlyRevenue = getHourlyRevenueTrend(data, cutoffHour);
 
   // Generate all chart data AFTER data is available
@@ -154,7 +172,12 @@ export default function Dashboard({ fseId, cutoffHour, }: DashboardProps) {
   </div>
 )}
         {/* <FilterBar orderType={orderType} setOrderType={setOrderType} /> */}
-       <DateFilter selected={dateOption} onSelect={handleDateSelect} />
+        <DateFilter
+          selected={dateOption}
+          cutoffHour={searchParams.get("cutoffHour") ?? "04"}
+          onCutoffChange={handleCutoffChange}
+          onSelect={handleDateSelect}
+        />
         <div className="mt-6">
           <SummaryCards summary={summary} />
         </div>
