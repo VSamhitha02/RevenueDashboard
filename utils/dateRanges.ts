@@ -5,8 +5,7 @@ export type DateFilterOption =
   | "Last Week"
   | "This Month"
   | "Last Month"
-  | "Custom Date"
-  | "Custom Date Range";
+  | "Custom";
 
 function formatForApi(date: Date, cutoffHour: number) {
   const d = new Date(date);
@@ -21,7 +20,6 @@ function formatForApi(date: Date, cutoffHour: number) {
 
 export function getDateRange(
   option: DateFilterOption,
-  customDate?: string,
   customStart?: string,
   customEnd?: string,
   cutoffHour: number = 4
@@ -94,19 +92,10 @@ export function getDateRange(
       };
     }
 
-    case "Custom Date": {
-      if (!customDate) return getDateRange("Today", undefined, undefined, undefined, cutoffHour);
-      const start = new Date(customDate);
-      const end = new Date(customDate);
-      end.setDate(end.getDate() + 1);
-      return {
-        startDate: formatForApi(start, cutoffHour),
-        endDate: formatForApi(end, cutoffHour),
-      };
-    }
-
-    case "Custom Date Range": {
-      if (!customStart || !customEnd) return getDateRange("Today", undefined, undefined, undefined, cutoffHour);
+    case "Custom": {
+      if (!customStart || !customEnd) {
+        return getDateRange("Today", undefined, undefined, cutoffHour);
+      }
       const start = new Date(customStart);
       const end = new Date(customEnd);
       end.setDate(end.getDate() + 1);
@@ -117,6 +106,6 @@ export function getDateRange(
     }
 
     default:
-      return getDateRange("Today", undefined, undefined, undefined, cutoffHour);
+      return getDateRange("Today", undefined, undefined, cutoffHour);
   }
 }

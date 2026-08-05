@@ -31,30 +31,10 @@ const OPTIONS: DateFilterOption[] = [
   "Last Week",
   "This Month",
   "Last Month",
-  "Custom Date",
-  "Custom Date Range",
+  "Custom",
 ];
 
-// Desktop button row excludes "Custom Date Range" — that one now lives
-// permanently in the fixed right-corner box instead of being a button.
-const BUTTON_OPTIONS: DateFilterOption[] = OPTIONS.filter(
-  (o) => o !== "Custom Date Range",
-);
-
-function formatDisplayDate(date: Date): string {
-  return date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function formatShortDate(date: Date): string {
-  return date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-  });
-}
+const BUTTON_OPTIONS = OPTIONS;
 
 function toSegmentedStr(date: Date): string {
   const d = String(date.getDate()).padStart(2, "0");
@@ -80,19 +60,16 @@ function parseMaskedDate(formattedStr: string): Date | null {
 }
 
 type InputProps = {
-  value?: string; // combined "DD/MM/YYYY", used to sync when the calendar sets a date
+  value?: string;
   onClick?: () => void;
   onChangeValue: (val: string) => void;
   onDateParsed: (d: Date) => void;
+  disabled?: boolean;
   className?: string;
 };
 
-// Segmented DD / MM / YYYY input — the two "/" are real, fixed characters.
-// Only the digit boxes are editable; typing auto-advances; backspace on an
-// empty box jumps back a segment. Clicking or focusing any segment still
-// tells react-datepicker to open the calendar via onClick.
 const SegmentedDateInput = forwardRef<HTMLDivElement, InputProps>(
-  ({ value = "", onClick, onChangeValue, onDateParsed, className = "" }, ref) => {
+  ({ value = "", onClick, onChangeValue, onDateParsed, disabled = false, className = "" }, ref) => {
     const [dd, setDd] = useState("");
     const [mm, setMm] = useState("");
     const [yyyy, setYyyy] = useState("");
@@ -101,8 +78,6 @@ const SegmentedDateInput = forwardRef<HTMLDivElement, InputProps>(
     const monthRef = useRef<HTMLInputElement>(null);
     const yearRef = useRef<HTMLInputElement>(null);
 
-    // Keep segments in sync when the parent sets a full value externally
-    // (e.g. user clicked a day on the calendar popup).
     useEffect(() => {
       const [d = "", m = "", y = ""] = value.split("/");
       setDd(d);
@@ -118,7 +93,6 @@ const SegmentedDateInput = forwardRef<HTMLDivElement, InputProps>(
       }
     };
 
-    // clamp so e.g. typing "3" then "9" for day can't produce "39"
     const clamp = (digits: string, max: number, upperBound: number) => {
       if (digits.length === max) {
         const n = parseInt(digits, 10);
@@ -137,6 +111,7 @@ const SegmentedDateInput = forwardRef<HTMLDivElement, InputProps>(
         seg: "d" | "m" | "y",
       ) =>
       (e: ChangeEvent<HTMLInputElement>) => {
+        if (disabled) return;
         let digits = e.target.value.replace(/\D/g, "").slice(0, max);
         digits = clamp(digits, max, upperBound);
         setter(digits);
@@ -158,6 +133,7 @@ const SegmentedDateInput = forwardRef<HTMLDivElement, InputProps>(
         prevRef: React.RefObject<HTMLInputElement | null> | null,
       ) =>
       (e: KeyboardEvent<HTMLInputElement>) => {
+        if (disabled) return;
         if (e.key === "Backspace" && current === "" && prevRef?.current) {
           prevRef.current.focus();
         }
@@ -171,45 +147,52 @@ const SegmentedDateInput = forwardRef<HTMLDivElement, InputProps>(
       };
 
     const segmentClass =
-      "text-center bg-transparent outline-none text-black placeholder:text-gray-400";
+      "text-center bg-transparent outline-none text-black placeholder:text-gray-400 disabled:cursor-not-allowed";
 
     return (
       <div
         ref={ref}
-        onClick={onClick}
-        className={`flex items-center gap-0.5 border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-mono text-black shadow-sm focus-within:ring-2 focus-within:ring-orange-500 cursor-text ${className}`}
+        onClick={disabled ? undefined : onClick}
+        className={`flex items-center gap-0.5 border border-gray-300 rounded-lg px-2 py-1 text-xs font-mono text-black shadow-sm ${
+          disabled
+            ? "bg-gray-100 cursor-not-allowed opacity-80"
+            : "focus-within:ring-2 focus-within:ring-orange-500 cursor-text"
+        } ${className}`}
       >
         <input
           ref={dayRef}
           value={dd}
+          disabled={disabled}
           onChange={makeHandler(setDd, 2, 31, monthRef, "d")}
           onKeyDown={makeKeyDown(dd, null)}
-          onFocus={onClick}
+          onFocus={disabled ? undefined : onClick}
           placeholder="DD"
           inputMode="numeric"
-          className={`${segmentClass} w-5`}
+          className={`${segmentClass} w-4`}
         />
         <span className="text-black select-none">/</span>
         <input
           ref={monthRef}
           value={mm}
+          disabled={disabled}
           onChange={makeHandler(setMm, 2, 12, yearRef, "m")}
           onKeyDown={makeKeyDown(mm, dayRef)}
-          onFocus={onClick}
+          onFocus={disabled ? undefined : onClick}
           placeholder="MM"
           inputMode="numeric"
-          className={`${segmentClass} w-5`}
+          className={`${segmentClass} w-4`}
         />
         <span className="text-black select-none">/</span>
         <input
           ref={yearRef}
           value={yyyy}
+          disabled={disabled}
           onChange={makeHandler(setYyyy, 4, 9999, null, "y")}
           onKeyDown={makeKeyDown(yyyy, monthRef)}
-          onFocus={onClick}
+          onFocus={disabled ? undefined : onClick}
           placeholder="YYYY"
           inputMode="numeric"
-          className={`${segmentClass} w-9`}
+          className={`${segmentClass} w-8`}
         />
       </div>
     );
@@ -222,107 +205,37 @@ export default function DateFilter({ selected, onSelect, cutoffHour, onCutoffCha
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [open, setOpen] = useState(false); // still used by the mobile dropdown
+  const [open, setOpen] = useState(false);
 
-  const urlCustomDate = searchParams.get("customDate");
   const urlCustomStart = searchParams.get("customStart");
   const urlCustomEnd = searchParams.get("customEnd");
 
-  const [customDate, setCustomDate] = useState<Date | null>(
-    urlCustomDate ? new Date(urlCustomDate) : null,
-  );
   const [customStart, setCustomStart] = useState<Date | null>(
-    urlCustomStart ? new Date(urlCustomStart) : null,
+    urlCustomStart ? new Date(urlCustomStart) : new Date(),
   );
   const [customEnd, setCustomEnd] = useState<Date | null>(
-    urlCustomEnd ? new Date(urlCustomEnd) : null,
-  );
-
-  const [dateStr, setDateStr] = useState(
-    urlCustomDate ? toSegmentedStr(new Date(urlCustomDate)) : "",
+    urlCustomEnd ? new Date(urlCustomEnd) : new Date(),
   );
 
   const initial24 = Number(cutoffHour || "0");
 
-  const [hour, setHour] = useState(
-    String(initial24 % 12 === 0 ? 12 : initial24 % 12),
-  );
+  const to12Hour = (hour24: number) => {
+    const hour = hour24 % 12 === 0 ? 12 : hour24 % 12;
+    const period = hour24 >= 12 ? "PM" : "AM";
+    return `${hour} ${period}`;
+  };
 
-  const [period, setPeriod] = useState(initial24 >= 12 ? "PM" : "AM");
+  const [cutoffValue, setCutoffValue] = useState(to12Hour(initial24));
 
   const [startStr, setStartStr] = useState(
-    urlCustomStart ? toSegmentedStr(new Date(urlCustomStart)) : "",
+    urlCustomStart ? toSegmentedStr(new Date(urlCustomStart)) : toSegmentedStr(new Date()),
   );
   const [endStr, setEndStr] = useState(
-    urlCustomEnd ? toSegmentedStr(new Date(urlCustomEnd)) : "",
+    urlCustomEnd ? toSegmentedStr(new Date(urlCustomEnd)) : toSegmentedStr(new Date()),
   );
 
   const today = new Date();
 
-  function getPresetRange(option: DateFilterOption): string {
-    const currentDate = new Date();
-
-    switch (option) {
-      case "Today":
-        return formatDisplayDate(currentDate);
-
-      case "Yesterday": {
-        const yesterday = new Date(currentDate);
-        yesterday.setDate(currentDate.getDate() - 1);
-        return formatDisplayDate(yesterday);
-      }
-
-      case "This Week": {
-        const start = new Date(currentDate);
-        const day = start.getDay();
-        const diff = day === 0 ? -6 : 1 - day;
-        start.setDate(start.getDate() + diff);
-
-        return `${formatShortDate(start)} - ${formatShortDate(currentDate)}`;
-      }
-
-      case "Last Week": {
-        const start = new Date(currentDate);
-        const day = start.getDay();
-        const diff = day === 0 ? -6 : 1 - day;
-        start.setDate(start.getDate() + diff - 7);
-
-        const end = new Date(start);
-        end.setDate(start.getDate() + 6);
-
-        return `${formatShortDate(start)} - ${formatShortDate(end)}`;
-      }
-
-      case "This Month": {
-        const start = new Date(
-          currentDate.getFullYear(),
-          currentDate.getMonth(),
-          1,
-        );
-        return `${formatShortDate(start)} - ${formatShortDate(currentDate)}`;
-      }
-
-      case "Last Month": {
-        const start = new Date(
-          currentDate.getFullYear(),
-          currentDate.getMonth() - 1,
-          1,
-        );
-        const end = new Date(
-          currentDate.getFullYear(),
-          currentDate.getMonth(),
-          0,
-        );
-        return `${formatShortDate(start)} - ${formatShortDate(end)}`;
-      }
-
-      default:
-        return "";
-    }
-  }
-
-  // Same date math as getPresetRange, but returns real Date objects so we
-  // can drop them straight into the fixed custom-range box on the right.
   function getPresetDateRange(
     option: DateFilterOption,
   ): { start: Date; end: Date } | null {
@@ -397,468 +310,263 @@ export default function DateFilter({ selected, onSelect, cutoffHour, onCutoffCha
     router.replace(`${pathname}?${next.toString()}`, { scroll: false });
   }
 
+  useEffect(() => {
+    if (selected !== "Custom") {
+      const range = getPresetDateRange(selected);
+      if (range) {
+        setCustomStart(range.start);
+        setCustomEnd(range.end);
+        setStartStr(toSegmentedStr(range.start));
+        setEndStr(toSegmentedStr(range.end));
+      }
+    }
+  }, [selected]);
+
   function handleSelectOption(option: DateFilterOption) {
+    const isCustomOption = option === "Custom";
+
+    if (!isCustomOption) {
+      const range = getPresetDateRange(option);
+      if (range) {
+        setCustomStart(range.start);
+        setCustomEnd(range.end);
+        setStartStr(toSegmentedStr(range.start));
+        setEndStr(toSegmentedStr(range.end));
+      }
+    }
+
     onSelect(
       option,
-      customDate?.toISOString(),
-      customStart?.toISOString(),
-      customEnd?.toISOString(),
+      undefined,
+      isCustomOption ? customStart?.toISOString() : undefined,
+      isCustomOption ? customEnd?.toISOString() : undefined,
     );
 
-    // Only keep custom-date params in the URL when they're relevant to the
-    // option just picked, so switching to a preset clears stale custom dates.
     updateUrl({
       dateFilter: option,
-      customDate: option === "Custom Date" ? customDate?.toISOString() : undefined,
-      customStart:
-        option === "Custom Date Range" ? customStart?.toISOString() : undefined,
-      customEnd:
-        option === "Custom Date Range" ? customEnd?.toISOString() : undefined,
+      customStart: isCustomOption ? customStart?.toISOString() : undefined,
+      customEnd: isCustomOption ? customEnd?.toISOString() : undefined,
     });
-
-    // Keep the fixed right-corner range box in sync with whichever preset
-    // was just picked (e.g. "Yesterday" -> 04/08/2026 to 04/08/2026).
-    const range = getPresetDateRange(option);
-    if (range) {
-      setCustomStart(range.start);
-      setCustomEnd(range.end);
-      setStartStr(toSegmentedStr(range.start));
-      setEndStr(toSegmentedStr(range.end));
-    }
 
     setOpen(false);
   }
 
-  const updateCutoffHour = (selectedHour: string, selectedPeriod: string) => {
-    let hour24 = Number(selectedHour);
+  const updateCutoffHour = (value: string) => {
+    const [hourStr, period] = value.split(" ");
+    let hour24 = Number(hourStr);
 
-    if (selectedPeriod === "AM") {
+    if (period === "AM") {
       if (hour24 === 12) hour24 = 0;
     } else {
       if (hour24 !== 12) hour24 += 12;
     }
 
-    const value = String(hour24);
-
-    onCutoffChange(value);
+    onCutoffChange(String(hour24));
 
     updateUrl({
-      cutoffHour: value,
+      cutoffHour: String(hour24),
     });
   };
 
-  return (
-    <div className="sticky top-0 z-50 bg-white rounded-lg shadow-md p-4 mb-6">
-      {/* ---------------- Desktop Layout (lg and up) ---------------- */}
-      <div className="hidden lg:flex items-center gap-3 flex-wrap">
-        <label className="font-bold text-black whitespace-nowrap">
-          Date Filter
-        </label>
+  const isEditable = selected === "Custom";
 
-        {/* Button Group (replaces the dropdown) */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {BUTTON_OPTIONS.map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => handleSelectOption(option)}
-              className={`px-3 py-1.5 rounded-lg text-sm text-black font-medium border transition-colors ${
-                selected === option
-                  ? "bg-orange-500 border-orange-500 text-white"
-                  : "bg-white border-gray-300 text-gray-800 hover:bg-gray-100"
-              }`}
-            >
-              {option}
-            </button>
-          ))}
-        </div>
+  const renderDateInputs = () => (
+    <div className="flex items-center gap-1.5 whitespace-nowrap">
+      <span className="text-xs font-semibold text-gray-500">From</span>
+      <DatePicker
+        selected={customStart}
+        disabled={!isEditable}
+        popperPlacement="bottom-start"
+       
 
-        {/* Inline single-date picker, only shown when "Custom Date" is active */}
-        {selected === "Custom Date" && (
-          <DatePicker
-            selected={customDate}
-            onChange={(date: Date | null) => {
-              setCustomDate(date);
-              if (date) {
-                setDateStr(toSegmentedStr(date));
-                onSelect("Custom Date", date.toISOString());
-                updateUrl({
-                  dateFilter: "Custom Date",
-                  customDate: date.toISOString(),
-                });
-              }
+        onChange={(date: Date | null) => {
+          if (!isEditable) return;
+          setCustomStart(date);
+          if (date) {
+            setStartStr(toSegmentedStr(date));
+            onSelect(
+              "Custom",
+              undefined,
+              date.toISOString(),
+              customEnd?.toISOString(),
+            );
+            updateUrl({
+              dateFilter: "Custom",
+              customStart: date.toISOString(),
+              customEnd: customEnd?.toISOString(),
+            });
+          }
+        }}
+        maxDate={today}
+        dateFormat="dd/MM/yyyy"
+        customInput={
+          <SegmentedDateInput
+            value={startStr}
+            disabled={!isEditable}
+            onChangeValue={setStartStr}
+            onDateParsed={(d) => {
+              if (!isEditable) return;
+              setCustomStart(d);
+              onSelect(
+                "Custom",
+                undefined,
+                d.toISOString(),
+                customEnd?.toISOString(),
+              );
+              updateUrl({
+                dateFilter: "Custom",
+                customStart: d.toISOString(),
+                customEnd: customEnd?.toISOString(),
+              });
             }}
-            maxDate={today}
-            dateFormat="dd/MM/yyyy"
-            customInput={
-              <SegmentedDateInput
-                value={dateStr}
-                onChangeValue={setDateStr}
-                onDateParsed={(d) => {
-                  setCustomDate(d);
-                  onSelect("Custom Date", d.toISOString());
-                  updateUrl({
-                    dateFilter: "Custom Date",
-                    customDate: d.toISOString(),
-                  });
-                }}
-              />
-            }
           />
-        )}
+        }
+      />
 
-        {/* Cutoff hour */}
+      <span className="text-xs font-semibold text-gray-500">to</span>
+
+      <DatePicker
+        selected={customEnd}
+        disabled={!isEditable}
+        popperPlacement="bottom-start"
+
+        onChange={(date: Date | null) => {
+          if (!isEditable) return;
+          setCustomEnd(date);
+          if (date) {
+            setEndStr(toSegmentedStr(date));
+            onSelect(
+              "Custom",
+              undefined,
+              customStart?.toISOString(),
+              date.toISOString(),
+            );
+            updateUrl({
+              dateFilter: "Custom",
+              customStart: customStart?.toISOString(),
+              customEnd: date.toISOString(),
+            });
+          }
+        }}
+        minDate={customStart || undefined}
+        maxDate={today}
+        dateFormat="dd/MM/yyyy"
+        customInput={
+          <SegmentedDateInput
+            value={endStr}
+            disabled={!isEditable}
+            onChangeValue={setEndStr}
+            onDateParsed={(d) => {
+              if (!isEditable) return;
+              setCustomEnd(d);
+              onSelect(
+                "Custom",
+                undefined,
+                customStart?.toISOString(),
+                d.toISOString(),
+              );
+              updateUrl({
+                dateFilter: "Custom",
+                customStart: customStart?.toISOString(),
+                customEnd: d.toISOString(),
+              });
+            }}
+          />
+        }
+      />
+    </div>
+  );
+
+  const renderCutoffHour = () => (
+    <div className="flex items-center gap-1.5 whitespace-nowrap">
+      <span className="text-xs font-semibold text-black">Cutoff</span>
+      <select
+        value={cutoffValue}
+        onChange={(e) => {
+          setCutoffValue(e.target.value);
+          updateCutoffHour(e.target.value);
+        }}
+        className="border border-gray-300 rounded-lg px-2 py-1 text-xs font-medium text-black bg-white shadow-sm focus:ring-2 focus:ring-orange-500 outline-none"
+      >
+        {Array.from({ length: 24 }, (_, i) => {
+          const hour = i % 12 === 0 ? 12 : i % 12;
+          const period = i < 12 ? "AM" : "PM";
+
+          return (
+            <option key={i} value={`${hour} ${period}`}>
+              {hour} {period}
+            </option>
+          );
+        })}
+      </select>
+    </div>
+  );
+
+  return (
+    <div className="sticky top-0 z-50 bg-white rounded-lg shadow-md px-4 py-3 mb-6">
+      {/* ---------------- Unified Single Line Container ---------------- */}
+      <div className="flex items-center justify-between gap-4 overflow-x-auto pb-1">
+        {/* Left: Desktop Buttons / Mobile Dropdown */}
         <div className="flex items-center gap-2">
-          <span className="text-sm text-black font-semibold whitespace-nowrap">
-            Cutoff Hour
-          </span>
-
-          <div className="flex items-center text-black gap-2">
-            <select
-              value={hour}
-              onChange={(e) => {
-                const h = e.target.value;
-                setHour(h);
-                updateCutoffHour(h, period);
-              }}
-              className="border rounded-lg px-3 py-2"
-            >
-              {Array.from({ length: 12 }, (_, i) => {
-                const value = String(i + 1);
-                return (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                );
-              })}
-            </select>
-
-            <select
-              value={period}
-              onChange={(e) => {
-                const p = e.target.value;
-                setPeriod(p);
-                updateCutoffHour(hour, p);
-              }}
-              className="border rounded-lg px-3 py-2"
-            >
-              <option value="AM">AM</option>
-              <option value="PM">PM</option>
-            </select>
+          {/* Desktop Filter Options */}
+          <div className="hidden lg:flex items-center gap-2">
+            {BUTTON_OPTIONS.map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => handleSelectOption(option)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                  selected === option
+                    ? "bg-orange-500 border-orange-500 text-white"
+                    : "bg-white border-gray-300 text-gray-800 hover:bg-gray-100"
+                }`}
+              >
+                {option}
+              </button>
+            ))}
           </div>
-        </div>
 
-        {/* Custom Date Range — fixed to the right corner, always visible,
-        and always refilled to match whichever filter is selected. */}
-        {selected !== "Custom Date" && (
-          <div className="ml-auto flex items-center gap-2">
-            <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">
-              From
-            </span>
-            <DatePicker
-              selected={customStart}
-              onChange={(date: Date | null) => {
-                setCustomStart(date);
-                if (date) {
-                  setStartStr(toSegmentedStr(date));
-                  onSelect(
-                    "Custom Date Range",
-                    undefined,
-                    date.toISOString(),
-                    customEnd?.toISOString(),
-                  );
-                  updateUrl({
-                    dateFilter: "Custom Date Range",
-                    customStart: date.toISOString(),
-                    customEnd: customEnd?.toISOString(),
-                  });
-                }
-              }}
-              maxDate={today}
-              dateFormat="dd/MM/yyyy"
-              customInput={
-                <SegmentedDateInput
-                  value={startStr}
-                  onChangeValue={setStartStr}
-                  onDateParsed={(d) => {
-                    setCustomStart(d);
-                    onSelect(
-                      "Custom Date Range",
-                      undefined,
-                      d.toISOString(),
-                      customEnd?.toISOString(),
-                    );
-                    updateUrl({
-                      dateFilter: "Custom Date Range",
-                      customStart: d.toISOString(),
-                      customEnd: customEnd?.toISOString(),
-                    });
-                  }}
-                />
-              }
-            />
+          {/* Mobile Filter Dropdown */}
+          <div className="relative inline-block lg:hidden">
+            <button
+              type="button"
+              onClick={() => setOpen((o) => !o)}
+              className="bg-white border border-gray-300 rounded-lg px-3 py-1 text-xs font-semibold text-black shadow-sm flex items-center gap-1.5"
+            >
+              📅 {selected}
+              <span className="text-[10px]">▼</span>
+            </button>
 
-            <span className="text-gray-500 font-medium">to</span>
-
-            <DatePicker
-              selected={customEnd}
-              onChange={(date: Date | null) => {
-                setCustomEnd(date);
-                if (date) {
-                  setEndStr(toSegmentedStr(date));
-                  onSelect(
-                    "Custom Date Range",
-                    undefined,
-                    customStart?.toISOString(),
-                    date.toISOString(),
-                  );
-                  updateUrl({
-                    dateFilter: "Custom Date Range",
-                    customStart: customStart?.toISOString(),
-                    customEnd: date.toISOString(),
-                  });
-                }
-              }}
-              minDate={customStart || undefined}
-              maxDate={today}
-              dateFormat="dd/MM/yyyy"
-              customInput={
-                <SegmentedDateInput
-                  value={endStr}
-                  onChangeValue={setEndStr}
-                  onDateParsed={(d) => {
-                    setCustomEnd(d);
-                    onSelect(
-                      "Custom Date Range",
-                      undefined,
-                      customStart?.toISOString(),
-                      d.toISOString(),
-                    );
-                    updateUrl({
-                      dateFilter: "Custom Date Range",
-                      customStart: customStart?.toISOString(),
-                      customEnd: d.toISOString(),
-                    });
-                  }}
-                />
-              }
-            />
-          </div>
-        )}
-      </div>
-
-      {/* ---------------- Mobile / Tablet Layout (below lg) ---------------- */}
-      <div className="flex lg:hidden items-center gap-4 flex-wrap">
-        <label className="font-bold text-black">Date Filter</label>
-
-        <div className="relative inline-block">
-          <button
-            type="button"
-            onClick={() => setOpen((o) => !o)}
-            className="bg-white border rounded-lg px-4 py-2 font-semibold text-black shadow flex items-center gap-2"
-          >
-            📅 {selected}
-            <span className="text-xs">▼</span>
-          </button>
-
-          {open && (
-            <div className="absolute z-50 mt-2 w-56 rounded-lg shadow-xl overflow-hidden bg-white border border-gray-200">
-              <div className="bg-orange-500 px-4 py-2 font-semibold text-white text-sm">
-                Filter by Date
-              </div>
-
-              {OPTIONS.map((option) => (
-                <div
-                  key={option}
-                  onClick={() => handleSelectOption(option)}
-                  className={`flex items-center justify-between px-4 py-2.5 cursor-pointer text-sm transition-colors ${
-                    selected === option
-                      ? "bg-orange-50 text-orange-600 font-semibold"
-                      : "text-gray-800 hover:bg-gray-100"
-                  }`}
-                >
-                  <span>{option}</span>
-                  {selected === option && <span>✓</span>}
+            {open && (
+              <div className="absolute left-0 z-50 mt-2 w-48 rounded-lg shadow-xl overflow-hidden bg-white border border-gray-200">
+                <div className="bg-orange-500 px-3 py-1.5 font-semibold text-white text-xs">
+                  Filter by Date
                 </div>
-              ))}
-            </div>
-          )}
+
+                {OPTIONS.map((option) => (
+                  <div
+                    key={option}
+                    onClick={() => handleSelectOption(option)}
+                    className={`flex items-center justify-between px-3 py-2 cursor-pointer text-xs transition-colors ${
+                      selected === option
+                        ? "bg-orange-50 text-orange-600 font-semibold"
+                        : "text-gray-800 hover:bg-gray-100"
+                    }`}
+                  >
+                    <span>{option}</span>
+                    {selected === option && <span>✓</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
-          {selected === "Custom Date" && (
-            <DatePicker
-              selected={customDate}
-              onChange={(date: Date | null) => {
-                setCustomDate(date);
-                if (date) {
-                  setDateStr(toSegmentedStr(date));
-                  onSelect("Custom Date", date.toISOString());
-                  updateUrl({
-                    dateFilter: "Custom Date",
-                    customDate: date.toISOString(),
-                  });
-                }
-              }}
-              maxDate={today}
-              dateFormat="dd/MM/yyyy"
-              customInput={
-                <SegmentedDateInput
-                  value={dateStr}
-                  onChangeValue={setDateStr}
-                  onDateParsed={(d) => {
-                    setCustomDate(d);
-                    onSelect("Custom Date", d.toISOString());
-                    updateUrl({
-                      dateFilter: "Custom Date",
-                      customDate: d.toISOString(),
-                    });
-                  }}
-                />
-              }
-            />
-          )}
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-black whitespace-nowrap">
-              Cutoff Hour
-            </span>
-
-            <div className="text-black flex items-center gap-2">
-              <select
-                value={hour}
-                onChange={(e) => {
-                  const h = e.target.value;
-                  setHour(h);
-                  updateCutoffHour(h, period);
-                }}
-                className="border rounded-lg px-3 py-2"
-              >
-                {Array.from({ length: 12 }, (_, i) => {
-                  const value = String(i + 1);
-                  return (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  );
-                })}
-              </select>
-
-              <select
-                value={period}
-                onChange={(e) => {
-                  const p = e.target.value;
-                  setPeriod(p);
-                  updateCutoffHour(hour, p);
-                }}
-                className="border rounded-lg px-3 py-2"
-              >
-                <option value="AM">AM</option>
-                <option value="PM">PM</option>
-              </select>
-            </div>
-          </div>
-
-          {selected === "Custom Date Range" && (
-            <div className="flex items-center gap-2">
-              <DatePicker
-                selected={customStart}
-                onChange={(date: Date | null) => {
-                  setCustomStart(date);
-                  if (date) {
-                    setStartStr(toSegmentedStr(date));
-                    onSelect(
-                      "Custom Date Range",
-                      undefined,
-                      date.toISOString(),
-                      customEnd?.toISOString(),
-                    );
-                    updateUrl({
-                      dateFilter: "Custom Date Range",
-                      customStart: date.toISOString(),
-                      customEnd: customEnd?.toISOString(),
-                    });
-                  }
-                }}
-                maxDate={today}
-                dateFormat="dd/MM/yyyy"
-                customInput={
-                  <SegmentedDateInput
-                    value={startStr}
-                    onChangeValue={setStartStr}
-                    onDateParsed={(d) => {
-                      setCustomStart(d);
-                      onSelect(
-                        "Custom Date Range",
-                        undefined,
-                        d.toISOString(),
-                        customEnd?.toISOString(),
-                      );
-                      updateUrl({
-                        dateFilter: "Custom Date Range",
-                        customStart: d.toISOString(),
-                        customEnd: customEnd?.toISOString(),
-                      });
-                    }}
-                  />
-                }
-              />
-
-              <span className="text-gray-500 font-medium">to</span>
-
-              <DatePicker
-                selected={customEnd}
-                onChange={(date: Date | null) => {
-                  setCustomEnd(date);
-                  if (date) {
-                    setEndStr(toSegmentedStr(date));
-                    onSelect(
-                      "Custom Date Range",
-                      undefined,
-                      customStart?.toISOString(),
-                      date.toISOString(),
-                    );
-                    updateUrl({
-                      dateFilter: "Custom Date Range",
-                      customStart: customStart?.toISOString(),
-                      customEnd: date.toISOString(),
-                    });
-                  }
-                }}
-                minDate={customStart || undefined}
-                maxDate={today}
-                dateFormat="dd/MM/yyyy"
-                customInput={
-                  <SegmentedDateInput
-                    value={endStr}
-                    onChangeValue={setEndStr}
-                    onDateParsed={(d) => {
-                      setCustomEnd(d);
-                      onSelect(
-                        "Custom Date Range",
-                        undefined,
-                        customStart?.toISOString(),
-                        d.toISOString(),
-                      );
-                      updateUrl({
-                        dateFilter: "Custom Date Range",
-                        customStart: customStart?.toISOString(),
-                        customEnd: d.toISOString(),
-                      });
-                    }}
-                  />
-                }
-              />
-            </div>
-          )}
-
-          {selected !== "Custom Date" &&
-            selected !== "Custom Date Range" &&
-            getPresetRange(selected) && (
-              <span className="bg-gray-100 border border-gray-200 text-gray-700 font-medium px-3 py-1.5 rounded-lg text-sm">
-                {getPresetRange(selected)}
-              </span>
-            )}
+        {/* Right Side: Date Range Inputs + Cutoff Hour */}
+        <div className="flex items-center gap-3">
+          {renderDateInputs()}
+          <div className="h-5 w-px bg-gray-300" />
+          {renderCutoffHour()}
         </div>
       </div>
     </div>
