@@ -174,7 +174,7 @@ function handleCutoffChange(hour: string) {
         {/* <FilterBar orderType={orderType} setOrderType={setOrderType} /> */}
         <DateFilter
           selected={dateOption}
-          cutoffHour={searchParams.get("cutoffHour") ?? "04"}
+          cutoffHour={searchParams.get("cutoffHour") ?? String(cutoffHour).padStart(2, "0")}
           onCutoffChange={handleCutoffChange}
           onSelect={handleDateSelect}
         />
